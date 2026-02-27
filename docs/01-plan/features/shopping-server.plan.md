@@ -26,7 +26,7 @@
 ## 2. 기능 범위 (Scope)
 
 ### 2.1 인증 및 회원 관리
-- [ ] **SSO 로그인**: 카카오, 네이버 OAuth2 소셜 로그인
+- [ ] **SSO 로그인**: 카카오, 네이버 OAuth2 소셜 로그인 ⚠️ *서드파티 — 마지막 단계 실제 연동 (개발 중: 이메일/비밀번호 로컬 인증으로 대체)*
   - [ ] **JWT 인증**: Access Token + Refresh Token 발급/갱신/폐기
   - [ ] **이용약관 동의 관리**: 필수/선택 약관 동의 여부 저장 및 조회
   - [ ] **개인정보 동의 관리**: 개인정보 수집·이용 동의 관리
@@ -37,6 +37,7 @@
 - [ ] **카테고리별 상품 노출**: 신상품, 베스트셀러, 특가 등 분류별 목록
   - [ ] **상품 검색**: MySQL FULLTEXT 검색 + QueryDSL 복합 필터/정렬 (초기), 추후 Elasticsearch 도입 예정
   - [ ] **홈 화면 배너 관리**: 배너 등록/수정/삭제/순서 관리 (관리자 API `/admin/**`)
+  - [ ] **이미지 업로드** ⚠️ *AWS S3 — 마지막 단계 실제 연동 (개발 중: LocalFileStorage로 대체)*
 
 ### 2.3 장바구니
 - [ ] **장바구니 CRUD**: 상품 추가/수량 변경/삭제
@@ -44,7 +45,7 @@
   - [ ] **실시간 재고 연동**: 장바구니 담기 시 Redis 재고 수량 확인 및 선점
 
 ### 2.4 결제
-- [ ] **토스페이먼츠 연동**: 결제 요청/승인/취소 API 연동
+- [ ] **토스페이먼츠 연동**: 결제 요청/승인/취소 API 연동 ⚠️ *서드파티 — 마지막 단계 실제 연동 (개발 중: MockPaymentGateway로 대체)*
   - [ ] **결제 원자성 보장**: Redis Lua Script 기반 분산 트랜잭션
   - [ ] **쿠폰 시스템**: 쿠폰 발행/적용/사용 처리
   - [ ] **쿠폰 원자성 보장**: Redis Lua Script 기반 중복 사용 방지
@@ -62,7 +63,7 @@
   - [ ] **공지사항**: 게시글 형태 공지 등록/수정/삭제/조회
 
 ### 2.7 알림
-- [ ] **푸시 알림 발송**: Firebase FCM 연동, 주문 상태 변경/마케팅 발송
+- [ ] **푸시 알림 발송**: Firebase FCM 연동, 주문 상태 변경/마케팅 발송 ⚠️ *서드파티 — 마지막 단계 실제 연동 (개발 중: MockPushSender로 대체)*
 
 ### 2.8 관리자 (Admin) — 전용 사이트에서 로그인 후 사용
 - [ ] **관리자 로그인**: 이메일/비밀번호 로그인 (ROLE_ADMIN 계정, 자동 가입 불가)
@@ -201,7 +202,78 @@ presentation → application → domain ← infra
 - Spring Security `hasRole('ADMIN')` + `@PreAuthorize` 어노테이션으로 API 보호
 - 관리자 계정은 DB에서 직접 생성/관리 (자동 가입 불가)
 
-### 3.4 명명 규칙
+### 3.4 로컬 우선 개발 전략 (Local-First Development)
+
+> **원칙**: 서드파티 의존성 없이 로컬에서 전체 기능 개발 → 마지막 단계에서 실제 서드파티로 교체
+
+#### 서드파티별 로컬 대체 방안
+
+| 서드파티 | 실제 서비스 | 개발 중 대체 | 구현 위치 |
+|---------|----------|------------|---------|
+| Kakao/Naver OAuth2 | 소셜 로그인 | 이메일/비밀번호 로컬 인증 | `infra/auth/LocalAuthAdapter` |
+| 토스페이먼츠 | 결제 API | `MockPaymentGateway` (항상 승인 반환) | `infra/payment/MockPaymentGateway` |
+| Firebase FCM | 푸시 알림 | `MockPushSender` (로그 출력) | `infra/notification/MockPushSender` |
+| AWS S3 | 이미지 저장 | 로컬 파일 시스템 저장 | `infra/storage/LocalFileStorage` |
+| AWS RDS | MySQL DB | Docker local MySQL | `docker-compose.local.yml` |
+
+#### 인터페이스 추상화 패턴
+
+DDD 인프라 레이어에서 인터페이스를 통해 구현체를 분리 → Spring Profile로 교체:
+
+```java
+// domain 레이어 — 인터페이스 정의 (변하지 않음)
+public interface PaymentGateway {
+    PaymentResult approve(PaymentRequest request);
+    void cancel(String paymentKey);
+}
+
+public interface PushSender {
+    void send(PushMessage message);
+}
+
+public interface FileStorage {
+    String upload(MultipartFile file, String path);
+}
+
+// infra 레이어 — 개발용 Mock
+@Component
+@Profile({"local", "test"})
+public class MockPaymentGateway implements PaymentGateway {
+    public PaymentResult approve(PaymentRequest req) {
+        log.info("[MOCK] 결제 승인: orderId={}, amount={}", req.orderId(), req.amount());
+        return PaymentResult.success("mock-payment-key-" + UUID.randomUUID());
+    }
+}
+
+// infra 레이어 — 운영용 실제 구현체
+@Component
+@Profile("prod")
+public class TossPaymentGateway implements PaymentGateway { ... }
+```
+
+#### Profile 전략
+
+| Profile | 용도 | 서드파티 |
+|---------|------|---------|
+| `local` | 로컬 개발 | Mock 전체 사용 |
+| `test` | 테스트 (H2) | Mock 전체 사용 |
+| `prod` | 운영 배포 | 실제 서드파티 연동 |
+
+#### 로컬 인증 전략 (Kakao/Naver 대체)
+
+```
+로컬 개발 시 인증 흐름:
+POST /api/v1/auth/local-login  (개발 전용, prod 비활성화)
+  → email + password로 로그인
+  → Member가 없으면 자동 생성 (개발 편의)
+  → JWT (AT + RT) 발급 — 실제와 동일한 토큰 구조
+
+운영 전환 시:
+POST /api/v1/auth/kakao       (Kakao OAuth2 코드 → AT 발급)
+POST /api/v1/auth/naver       (Naver OAuth2 코드 → AT 발급)
+```
+
+### 3.5 명명 규칙
 - Aggregate/Entity: 명사 단수형 → `Member`, `Order`, `OrderItem`
 - Value Object: 의미 있는 명사 → `Money`, `OrderStatus`, `Email`
 - Domain Service: `{도메인}DomainService` → `StockDomainService`
@@ -641,17 +713,41 @@ services:
 
 ## 9. 개발 순서 (추천)
 
-1. **Phase 1**: 프로젝트 기반 설정 (패키지 구조, Layered+DDD 뼈대, Docker-compose, CI/CD, RDS 연결)
-2. **Phase 2**: 인증/회원 도메인 (SSO, JWT, 약관, 적립금)
-3. **Phase 3**: 상품/카테고리/배너/검색 (S3 이미지, MySQL FULLTEXT 검색)
+> **로컬 우선 전략**: Phase 1~9는 서드파티 없이 로컬 환경(Docker-compose + Mock)에서 구현.
+> Phase 10에서 실제 서드파티 연동. Phase 11에서 운영 배포.
+
+### Phase 1~9: 로컬 개발 단계 (서드파티 Mock 사용)
+
+1. **Phase 1**: 프로젝트 기반 설정 (패키지 구조, Layered+DDD 뼈대, Docker-compose, CI/CD) ✅ *완료*
+2. **Phase 2**: 인증/회원 도메인 — **로컬 이메일/비밀번호 로그인**, JWT, 약관, 적립금
+   - Kakao/Naver OAuth2 → 로컬 인증으로 대체 (`@Profile("local")`)
+3. **Phase 3**: 상품/카테고리/배너/검색 — **로컬 파일 저장**, MySQL FULLTEXT 검색
+   - AWS S3 → `LocalFileStorage`로 대체
 4. **Phase 4**: 장바구니 (Redis 실시간 재고 연동)
 5. **Phase 5**: 쿠폰 시스템 (Redis Lua Script)
-6. **Phase 6**: 결제 (토스페이먼츠 + 분산 트랜잭션)
+6. **Phase 6**: 결제 — **MockPaymentGateway** (항상 승인 반환), 분산 트랜잭션 로직 구현
+   - 토스페이먼츠 → `MockPaymentGateway`로 대체
 7. **Phase 7**: 주문/취소/교환/반품
 8. **Phase 8**: CS (리뷰, 1:1문의, FAQ, 공지사항)
-9. **Phase 9**: 푸시 알림 (Firebase FCM)
-10. **Phase 10**: 운영 배포 (EC2 + ALB + Blue-Green CI/CD)
-11. **Phase 11 (추후)**: Elasticsearch 도입 — 검색 품질 고도화
+9. **Phase 9**: 알림 — **MockPushSender** (로그 출력), 알림 로직 구현
+   - Firebase FCM → `MockPushSender`로 대체
+
+### Phase 10: 서드파티 실제 연동 (운영 준비 단계)
+
+10. **Phase 10**: 서드파티 실제 연동
+    - [ ] **Kakao/Naver OAuth2**: `KakaoOAuthClient`, `NaverOAuthClient` 구현 + `@Profile("prod")` 활성화
+    - [ ] **토스페이먼츠**: `TossPaymentGateway` 구현 + Webhook 수신 처리
+    - [ ] **Firebase FCM**: `FcmPushSender` 구현 + 서비스 계정 키 설정
+    - [ ] **AWS S3**: `S3FileStorage` 구현 + Presigned URL + CloudFront CDN
+    - [ ] **AWS RDS**: 로컬 MySQL → RDS 연결 (`application-prod.yml` 환경변수 설정)
+    - [ ] 전 API E2E 검증 (실제 서드파티 연동 후 회귀 테스트)
+
+### Phase 11: 운영 배포
+
+11. **Phase 11**: 운영 배포 (EC2 + Docker-compose + Nginx Blue-Green CI/CD)
+
+### Phase 12 (추후)
+12. **Phase 12**: Elasticsearch 도입 — 검색 품질 고도화
 
 ---
 
@@ -671,6 +767,6 @@ services:
 ---
 
 **작성일**: 2026-02-27
-**최종 수정**: 2026-02-27 (Layered+DDD, RDS MySQL, ES 미도입, EC2 t3.medium, Docker Nginx LB, Blue-Green 확정)
+**최종 수정**: 2026-02-28 (로컬 우선 개발 전략 추가 — Phase 1~9: Mock/Stub, Phase 10: 서드파티 실제 연동)
 **작성자**: Claude Code (Sonnet 4.6)
 **상태**: Draft

@@ -13,6 +13,14 @@ spring:
     default-property-inclusion: non_null
     time-zone: Asia/Seoul
 
+  threads:
+    virtual:
+      enabled: true  # Java 21 Virtual Thread
+
+jwt:
+  secret: ${JWT_SECRET:local-dev-secret-key-must-be-at-least-32-characters-long}
+  access-token-expiry: 3600  # 1시간 (초)
+
 server:
   port: 8080
   compression:
@@ -23,9 +31,6 @@ server:
     threads:
       max: 200
       min-spare: 20
-
-# Java 21 Virtual Thread
-spring.threads.virtual.enabled: true
 
 management:
   endpoints:

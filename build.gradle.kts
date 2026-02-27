@@ -1,18 +1,16 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     java
     id("org.springframework.boot") version "3.4.3"
     id("io.spring.dependency-management") version "1.1.7"
-    id("com.ewerk.gradle.plugins.querydsl") version "1.0.10"
 }
 
 group = "com.saemaul"
 version = "0.0.1-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 configurations {
@@ -41,7 +39,7 @@ dependencies {
     // Swagger / OpenAPI
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4")
 
-    // QueryDSL (Jakarta)
+    // QueryDSL (Jakarta — annotation processor 방식, Gradle 8 호환)
     implementation("com.querydsl:querydsl-jpa:${queryDslVersion}:jakarta")
     annotationProcessor("com.querydsl:querydsl-apt:${queryDslVersion}:jakarta")
     annotationProcessor("jakarta.annotation:jakarta.annotation-api")
@@ -71,32 +69,7 @@ dependencies {
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
-}
-
-// QueryDSL 소스 생성 경로
-val querydslDir = "${layout.buildDirectory.get()}/generated/querydsl"
-
-querydsl {
-    jpa = true
-    querydslSourcesDir = querydslDir
-}
-
-sourceSets {
-    main {
-        java {
-            srcDir(querydslDir)
-        }
-    }
-}
-
-configurations {
-    named("querydsl") {
-        extendsFrom(configurations.compileClasspath.get())
-    }
-}
-
-compileQuerydsl {
-    options.annotationProcessorPath = configurations["querydsl"]
+    testRuntimeOnly("com.h2database:h2")
 }
 
 tasks.withType<Test> {

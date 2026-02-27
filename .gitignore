@@ -80,7 +80,8 @@ docker.env
 .docker-env
 
 ### ─── 인증서 / SSL ────────────────────────────────────
-nginx/certs/
+nginx/certs/*
+!nginx/certs/.gitkeep
 *.pem
 *.key
 *.crt

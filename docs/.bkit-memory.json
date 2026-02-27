@@ -1,14 +1,26 @@
 {
-  "sessionCount": 5,
-  "currentFeature": "project-architecture",
+  "sessionCount": 8,
+  "currentFeature": "logging",
   "currentPhase": "plan",
   "level": "Enterprise",
   "lastSession": {
-    "startedAt": "2026-02-28T00:00:00.000Z",
+    "startedAt": "2026-02-27T17:46:57.361Z",
     "platform": "claude",
     "level": "Enterprise"
   },
   "features": {
+    "logging": {
+      "phase": "plan",
+      "planDoc": "docs/01-plan/features/logging.plan.md",
+      "startedAt": "2026-02-28T00:00:00.000Z",
+      "notes": "SLF4J+@Slf4j. info=비즈니스이벤트, warn=예상오류, error=장애. domain레이어 제외. 개인정보 로그금지."
+    },
+    "clean-code": {
+      "phase": "plan",
+      "planDoc": "docs/01-plan/features/clean-code.plan.md",
+      "startedAt": "2026-02-28T00:00:00.000Z",
+      "notes": "책임 분리(SRP) + Readable Facade 메소드 패턴. Application Service 설계 규약."
+    },
     "project-architecture": {
       "phase": "plan",
       "planDoc": "docs/01-plan/features/project-architecture.plan.md",

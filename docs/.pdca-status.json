@@ -1,13 +1,22 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-02-27T16:01:39.757Z",
+  "lastUpdated": "2026-02-27T18:03:08.764Z",
   "activeFeatures": [
     "shopping-server",
     "response-time-sla",
     "chonggak",
     "response",
     "exception",
-    "config"
+    "config",
+    "vo",
+    "domain",
+    "event",
+    "security",
+    "redis",
+    "persistence",
+    "dto",
+    "application",
+    "presentation"
   ],
   "primaryFeature": "shopping-server",
   "features": {
@@ -32,9 +41,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-27T15:51:05.073Z",
-        "lastUpdated": "2026-02-27T15:51:05.073Z"
+        "lastUpdated": "2026-02-27T17:53:06.136Z"
       },
-      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/main/java/com/saemaul/chonggak/SaemaulChonggakApplication.java"
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/test/java/com/saemaul/chonggak/SaemaulChonggakApplicationTests.java"
     },
     "response": {
       "phase": "do",
@@ -58,9 +67,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-27T15:51:33.296Z",
-        "lastUpdated": "2026-02-27T16:01:07.369Z"
+        "lastUpdated": "2026-02-27T17:44:56.705Z"
       },
-      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/main/java/com/saemaul/chonggak/shared/exception/GlobalExceptionHandler.java"
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/main/java/com/saemaul/chonggak/shared/exception/ErrorCode.java"
     },
     "config": {
       "phase": "do",
@@ -71,9 +80,126 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-27T15:51:52.198Z",
-        "lastUpdated": "2026-02-27T16:01:39.757Z"
+        "lastUpdated": "2026-02-27T17:46:52.217Z"
       },
-      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/main/java/com/saemaul/chonggak/shared/config/AsyncConfig.java"
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/main/java/com/saemaul/chonggak/shared/config/SwaggerConfig.java"
+    },
+    "vo": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-27T17:42:13.392Z",
+        "lastUpdated": "2026-02-27T17:42:27.927Z"
+      },
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/main/java/com/saemaul/chonggak/member/domain/vo/PointType.java"
+    },
+    "domain": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-27T17:42:42.633Z",
+        "lastUpdated": "2026-02-27T18:00:17.009Z"
+      },
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/test/java/com/saemaul/chonggak/member/domain/MemberTest.java"
+    },
+    "event": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-27T17:43:07.283Z",
+        "lastUpdated": "2026-02-27T17:43:07.283Z"
+      },
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/main/java/com/saemaul/chonggak/member/domain/event/MemberRegisteredEvent.java"
+    },
+    "security": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-27T17:43:13.813Z",
+        "lastUpdated": "2026-02-27T18:00:32.860Z"
+      },
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/test/java/com/saemaul/chonggak/shared/security/JwtProviderTest.java"
+    },
+    "redis": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-27T17:43:41.363Z",
+        "lastUpdated": "2026-02-27T17:43:45.973Z"
+      },
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/main/java/com/saemaul/chonggak/member/infra/redis/BlacklistRepository.java"
+    },
+    "persistence": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-27T17:43:50.146Z",
+        "lastUpdated": "2026-02-27T17:44:03.950Z"
+      },
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/main/java/com/saemaul/chonggak/member/infra/persistence/PointHistoryRepositoryImpl.java"
+    },
+    "dto": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-27T17:44:07.443Z",
+        "lastUpdated": "2026-02-27T17:46:17.496Z"
+      },
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/main/java/com/saemaul/chonggak/member/presentation/dto/LocalSignupRequest.java"
+    },
+    "application": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-27T17:44:42.626Z",
+        "lastUpdated": "2026-02-27T18:03:08.764Z"
+      },
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/test/java/com/saemaul/chonggak/member/application/MemberServiceTest.java"
+    },
+    "presentation": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-27T17:45:41.286Z",
+        "lastUpdated": "2026-02-27T18:01:55.372Z"
+      },
+      "lastFile": "/Users/user/Downloads/Saemaul_Chonggak/src/test/java/com/saemaul/chonggak/member/presentation/MemberControllerTest.java"
     }
   },
   "pipeline": {
@@ -86,7 +212,7 @@
   "session": {
     "startedAt": "2026-02-27T11:39:02.621Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-02-27T16:01:39.757Z"
+    "lastActivity": "2026-02-27T18:03:08.764Z"
   },
   "history": [
     {
@@ -200,6 +326,324 @@
     {
       "timestamp": "2026-02-27T16:01:39.757Z",
       "feature": "config",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:20:14.491Z",
+      "feature": "chonggak",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:20:18.890Z",
+      "feature": "chonggak",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:22:58.854Z",
+      "feature": "chonggak",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:42:13.392Z",
+      "feature": "vo",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:42:16.663Z",
+      "feature": "vo",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:42:19.687Z",
+      "feature": "vo",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:42:23.950Z",
+      "feature": "vo",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:42:27.927Z",
+      "feature": "vo",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:42:42.633Z",
+      "feature": "domain",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:42:49.217Z",
+      "feature": "domain",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:42:55.579Z",
+      "feature": "domain",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:42:59.838Z",
+      "feature": "domain",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:43:03.731Z",
+      "feature": "domain",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:43:07.283Z",
+      "feature": "event",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:43:13.813Z",
+      "feature": "security",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:43:24.346Z",
+      "feature": "security",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:43:34.632Z",
+      "feature": "security",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:43:41.363Z",
+      "feature": "redis",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:43:45.974Z",
+      "feature": "redis",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:43:50.146Z",
+      "feature": "persistence",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:43:55.457Z",
+      "feature": "persistence",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:43:59.715Z",
+      "feature": "persistence",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:44:03.950Z",
+      "feature": "persistence",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:44:07.443Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:44:10.721Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:44:15.750Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:44:20.500Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:44:23.571Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:44:28.068Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:44:42.626Z",
+      "feature": "application",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:44:52.248Z",
+      "feature": "application",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:44:56.705Z",
+      "feature": "exception",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:45:12.701Z",
+      "feature": "config",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:45:18.874Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:45:23.676Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:45:28.044Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:45:32.953Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:45:41.286Z",
+      "feature": "presentation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:45:50.563Z",
+      "feature": "presentation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:46:10.976Z",
+      "feature": "presentation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:46:17.496Z",
+      "feature": "dto",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:46:23.643Z",
+      "feature": "presentation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:46:32.907Z",
+      "feature": "presentation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:46:38.199Z",
+      "feature": "application",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:46:52.217Z",
+      "feature": "config",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T17:53:06.136Z",
+      "feature": "chonggak",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T18:00:17.009Z",
+      "feature": "domain",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T18:00:32.860Z",
+      "feature": "security",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T18:00:57.181Z",
+      "feature": "application",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T18:01:18.142Z",
+      "feature": "application",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T18:01:35.484Z",
+      "feature": "presentation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T18:01:55.372Z",
+      "feature": "presentation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-27T18:03:08.764Z",
+      "feature": "application",
       "phase": "do",
       "action": "updated"
     }
