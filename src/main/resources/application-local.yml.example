@@ -1,0 +1,61 @@
+# 로컬 개발 환경 설정 예시
+# 이 파일을 복사해서 application-local.yml 로 이름 변경 후 실제 값 입력
+# application-local.yml 은 .gitignore 에 포함되어 있어 커밋되지 않습니다
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/saemaul_chonggak?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: YOUR_DB_PASSWORD
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# JWT 설정
+jwt:
+  secret: YOUR_JWT_SECRET_KEY_MIN_32_CHARS
+  access-token-expiry: 3600000    # 1시간 (ms)
+  refresh-token-expiry: 604800000 # 7일 (ms)
+
+# OAuth2
+oauth2:
+  kakao:
+    client-id: YOUR_KAKAO_CLIENT_ID
+    client-secret: YOUR_KAKAO_CLIENT_SECRET
+    redirect-uri: http://localhost:8080/api/v1/auth/kakao/callback
+  naver:
+    client-id: YOUR_NAVER_CLIENT_ID
+    client-secret: YOUR_NAVER_CLIENT_SECRET
+    redirect-uri: http://localhost:8080/api/v1/auth/naver/callback
+
+# AWS S3
+cloud:
+  aws:
+    credentials:
+      access-key: YOUR_AWS_ACCESS_KEY
+      secret-key: YOUR_AWS_SECRET_KEY
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: YOUR_S3_BUCKET_NAME
+
+# 토스페이먼츠
+toss:
+  payments:
+    secret-key: YOUR_TOSS_SECRET_KEY
+    client-key: YOUR_TOSS_CLIENT_KEY
+
+logging:
+  level:
+    com.saemaul.chonggak: DEBUG
+    org.hibernate.SQL: DEBUG

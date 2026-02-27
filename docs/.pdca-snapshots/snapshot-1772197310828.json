@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-02-27T13:01:50.827Z",
+  "reason": "compaction",
+  "status": {
+    "version": "2.0",
+    "lastUpdated": "2026-02-27T00:00:00.000Z",
+    "activeFeatures": [
+      "response-time-sla"
+    ],
+    "primaryFeature": "response-time-sla",
+    "features": {
+      "shopping-server": {
+        "phase": "plan",
+        "startedAt": "2026-02-27T11:39:02.621Z",
+        "lastUpdated": "2026-02-27T11:39:02.621Z"
+      },
+      "response-time-sla": {
+        "phase": "plan",
+        "startedAt": "2026-02-27T00:00:00.000Z",
+        "lastUpdated": "2026-02-27T00:00:00.000Z",
+        "matchRate": null,
+        "iterationCount": 0
+      }
+    },
+    "pipeline": {
+      "currentPhase": 1,
+      "level": "Dynamic",
+      "phaseHistory": []
+    },
+    "session": {
+      "startedAt": "2026-02-27T11:39:02.621Z",
+      "onboardingCompleted": false,
+      "lastActivity": "2026-02-27T00:00:00.000Z"
+    },
+    "history": [
+      {
+        "feature": "response-time-sla",
+        "phase": "plan",
+        "action": "created",
+        "timestamp": "2026-02-27T00:00:00.000Z"
+      }
+    ]
+  }
+}

@@ -1,0 +1,137 @@
+name: Blue-Green Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  DOCKER_IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/saemaul-chonggak
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 소스 체크아웃
+        uses: actions/checkout@v4
+
+      - name: JDK 21 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Gradle 캐시
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Gradle 빌드 권한 부여
+        run: chmod +x gradlew
+
+      - name: 빌드 및 테스트
+        run: ./gradlew build -x test
+
+      - name: 테스트 실행
+        run: ./gradlew test
+
+  docker-build-push:
+    name: Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: 소스 체크아웃
+        uses: actions/checkout@v4
+
+      - name: JDK 21 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Gradle 캐시
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: JAR 빌드
+        run: chmod +x gradlew && ./gradlew bootJar
+
+      - name: Docker Hub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Docker 이미지 빌드 및 푸시
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:${{ env.IMAGE_TAG }}
+            ${{ env.DOCKER_IMAGE }}:latest
+
+  deploy:
+    name: Blue-Green Deploy to EC2
+    runs-on: ubuntu-latest
+    needs: docker-build-push
+
+    steps:
+      - name: EC2 SSH 배포 (Blue-Green 전환)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: DOCKER_IMAGE,IMAGE_TAG
+          script: |
+            set -e
+
+            APP_DIR=/opt/saemaul-chonggak
+            cd $APP_DIR
+
+            echo "=== 새 이미지 Pull ==="
+            DOCKER_IMAGE=${{ env.DOCKER_IMAGE }} IMAGE_TAG=${{ env.IMAGE_TAG }} \
+              docker-compose --profile green pull app_green
+
+            echo "=== Green 컨테이너 기동 ==="
+            DOCKER_IMAGE=${{ env.DOCKER_IMAGE }} IMAGE_TAG=${{ env.IMAGE_TAG }} \
+              docker-compose --profile green up -d app_green
+
+            echo "=== Green 헬스체크 대기 (최대 60초) ==="
+            for i in $(seq 1 12); do
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/actuator/health)
+              if [ "$STATUS" = "200" ]; then
+                echo "Green 헬스체크 성공 (시도 $i)"
+                break
+              fi
+              if [ $i -eq 12 ]; then
+                echo "Green 헬스체크 실패 — 롤백"
+                docker-compose --profile green stop app_green
+                exit 1
+              fi
+              echo "대기 중... (시도 $i/12)"
+              sleep 5
+            done
+
+            echo "=== Nginx upstream → Green 전환 ==="
+            sed -i 's/server app_blue:8080/server app_green:8081/' nginx/nginx.conf
+            docker exec nginx nginx -s reload
+
+            echo "=== Blue 컨테이너 정지 ==="
+            docker-compose stop app_blue
+
+            echo "=== 배포 완료 ==="
+            echo "Image: ${{ env.DOCKER_IMAGE }}:${{ env.IMAGE_TAG }}"

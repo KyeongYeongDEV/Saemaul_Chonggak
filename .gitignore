@@ -1,0 +1,101 @@
+# Claude Code
+.claude
+
+### ─── Build ──────────────────────────────────────────
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+### ─── IDE ────────────────────────────────────────────
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+### ─── OS ─────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### ─── Logs ───────────────────────────────────────────
+*.log
+logs/
+log/
+
+### ─── Spring Boot / Java ────────────────────────────
+# 실행 가능한 JAR (build/ 아래이지만 명시)
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# 컴파일 결과
+*.class
+target/
+
+# QueryDSL 자동 생성 소스
+src/main/generated/
+
+### ─── 환경변수 / 시크릿 ──────────────────────────────
+# 로컬 전용 환경변수 파일
+.env
+.env.*
+!.env.example
+
+# 운영/로컬 시크릿 설정 파일 (DB 비밀번호, JWT 키 등)
+src/main/resources/application-secret.yml
+src/main/resources/application-prod.yml
+src/main/resources/application-local.yml
+
+# AWS 자격증명
+.aws/
+aws-credentials
+
+# Firebase 서비스 계정 키
+firebase-service-account.json
+*-firebase-adminsdk-*.json
+google-services.json
+
+### ─── Docker ─────────────────────────────────────────
+# Docker 볼륨 데이터 (로컬 개발용)
+mysql-data/
+redis-data/
+
+# Docker 환경변수 파일
+docker.env
+.docker-env
+
+### ─── 인증서 / SSL ────────────────────────────────────
+nginx/certs/
+*.pem
+*.key
+*.crt
+*.p12
+*.keystore
+*.jks
+
+### ─── GitHub Actions 시크릿 ──────────────────────────
+# EC2 SSH 키 (로컬에 저장하는 경우)
+*.pem
+ec2-key.pem
+
+### ─── 테스트 / 임시 파일 ─────────────────────────────
+*.tmp
+*.temp
+*.swp
+*.swo
+*~

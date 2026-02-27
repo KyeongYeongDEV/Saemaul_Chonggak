@@ -1,0 +1,27 @@
+{
+  "sessionCount": 5,
+  "currentFeature": "project-architecture",
+  "currentPhase": "plan",
+  "level": "Enterprise",
+  "lastSession": {
+    "startedAt": "2026-02-28T00:00:00.000Z",
+    "platform": "claude",
+    "level": "Enterprise"
+  },
+  "features": {
+    "project-architecture": {
+      "phase": "plan",
+      "planDoc": "docs/01-plan/features/project-architecture.plan.md",
+      "startedAt": "2026-02-28T00:00:00.000Z",
+      "notes": "DDD 우선 + Layered 내부 구조. shared/ 공통 패키지 규약 확정."
+    },
+    "shopping-server": {
+      "phase": "plan",
+      "planDoc": "docs/01-plan/features/shopping-server.plan.md"
+    },
+    "response-time-sla": {
+      "phase": "plan",
+      "planDoc": "docs/01-plan/features/response-time-sla.plan.md"
+    }
+  }
+}
