@@ -1,6 +1,6 @@
 # shopping-server Analysis Report
 
-> **Analysis Type**: Gap Analysis (Design vs Implementation) - Phase 1~3 Scope
+> **Analysis Type**: Gap Analysis (Design vs Implementation) - Phase 1~3 Scope (v1.2 Updated)
 >
 > **Project**: Saemaul Chonggak Shopping Server
 > **Version**: 0.0.1-SNAPSHOT
@@ -40,26 +40,26 @@ Phase 1 (Project Setup), Phase 2 (Auth/Member), Phase 3 (Product/Category/Banner
 
 ### 2.1 Package Structure (Section 2.2)
 
-**Design**: `domain/`, `application/`, `infra/`, `presentation/`, `global/` (패키지-우선 레이어 구조)
+**Design**: Domain-first DDD 구조 (`{domain}/{layer}/`), `shared/` 공통 패키지
 
 **Implementation**: DDD 기반 **도메인-우선 구조** (`{domain}/{layer}/`)
 
-| Design (Flat Layer) | Implementation (Domain-First) | Status |
-|---------------------|-------------------------------|--------|
-| `domain/member/` | `member/domain/` | -- Changed |
-| `application/auth/` | `member/application/` | -- Changed |
-| `infra/persistence/member/` | `member/infra/persistence/` | -- Changed |
-| `infra/redis/` | `member/infra/redis/` | -- Changed |
-| `presentation/auth/` | `member/presentation/` | -- Changed |
-| `domain/product/` | `product/domain/` | -- Changed |
-| `application/product/` | `product/application/` | -- Changed |
-| `infra/persistence/product/` | `product/infra/persistence/` | -- Changed |
-| `presentation/product/` | `product/presentation/` | -- Changed |
-| `global/` | `shared/` | -- Changed |
+| Design (Domain-First) | Implementation (Domain-First) | Status |
+|------------------------|-------------------------------|--------|
+| `member/domain/` | `member/domain/` | -- Match |
+| `member/application/` | `member/application/` | -- Match |
+| `member/infra/persistence/` | `member/infra/persistence/` | -- Match |
+| `member/infra/redis/` | `member/infra/redis/` | -- Match |
+| `member/presentation/` | `member/presentation/` | -- Match |
+| `product/domain/` | `product/domain/` | -- Match |
+| `product/application/` | `product/application/` | -- Match |
+| `product/infra/persistence/` | `product/infra/persistence/` | -- Match |
+| `product/presentation/` | `product/presentation/` | -- Match |
+| `shared/` | `shared/` | -- Match |
 
-**Verdict**: 구조적 변경 (Flat Layer -> Domain-First). 4개 레이어(domain/application/infra/presentation)는 각 도메인 내부에서 보존됨. `global/` -> `shared/`로 네이밍 변경. **의도적 개선으로 판단** -- 도메인 응집도 향상, DDD 원칙에 부합.
+**Verdict**: 설계 문서가 Domain-first DDD 구조와 `shared/` 네이밍을 반영하여 구현과 완전 일치.
 
-**Impact**: Low (아키텍처 개선 방향)
+**Impact**: None (설계-구현 일치)
 
 ### 2.2 Auth/Member API Endpoints (Section 4.2)
 
@@ -80,10 +80,10 @@ Phase 1 (Project Setup), Phase 2 (Auth/Member), Phase 3 (Product/Category/Banner
 | Design Endpoint | Method | Implementation | Status |
 |----------------|--------|----------------|--------|
 | `/api/v1/members/me` | GET | `MemberController.getMyProfile()` | -- Match |
-| `/api/v1/members/me` | PATCH | 미구현 (닉네임 수정 등) | -- Missing |
+| `/api/v1/members/me` | PATCH | `MemberController.updateMyProfile()` (MemberUpdateRequest/MemberUpdateCommand) | -- Match |
 | `/api/v1/members/me` | DELETE | `MemberController.withdraw()` | -- Match |
 | `/api/v1/members/me/points` | GET | `MemberController.getMyPointBalance()` | -- Match |
-| `/api/v1/members/me/agreements` | PATCH | `MemberController.updateAgreement()` (PUT) | -- Changed (PATCH->PUT) |
+| `/api/v1/members/me/agreements` | PUT | `MemberController.updateAgreement()` (PUT) | -- Match |
 | `/api/v1/members/fcm-tokens` | POST | 미구현 (FCM 미구현) | -- Planned |
 | - | - | `/api/v1/members/me/agreements` (GET) | -- Added |
 | - | - | `/api/v1/members/me/points/history` (GET) | -- Added |
@@ -107,8 +107,8 @@ Phase 1 (Project Setup), Phase 2 (Auth/Member), Phase 3 (Product/Category/Banner
 | Design Endpoint | Method | Implementation | Status |
 |----------------|--------|----------------|--------|
 | `/admin/v1/products/**` | CRUD | `AdminProductController` (POST/PUT/DELETE) | -- Match |
-| `/admin/v1/categories/**` | CRUD | 미구현 | -- Missing |
-| `/admin/v1/banners/**` | CRUD | 미구현 | -- Missing |
+| `/admin/v1/categories/**` | CRUD | `AdminCategoryController` (POST/PUT/DELETE, CategoryCreateCommand/CategoryUpdateCommand) | -- Match |
+| `/admin/v1/banners/**` | CRUD | `AdminBannerController` (POST/PUT/DELETE, BannerCreateCommand/BannerUpdateCommand) | -- Match |
 
 ### 2.4 Data Model Comparison (Section 3.2)
 
@@ -199,27 +199,26 @@ Phase 1 (Project Setup), Phase 2 (Auth/Member), Phase 3 (Product/Category/Banner
 
 | Category | Design | Implementation | Status |
 |----------|--------|----------------|--------|
-| Code format | 단축 코드: C001, A001, M001, P001... | 서술적 코드: INVALID_INPUT, MEMBER_NOT_FOUND... | -- Changed (High Impact) |
-| Field order | (code, message, status) | (httpStatus, code, message) | -- Changed (field order) |
-| Common | C001, C002 | INVALID_INPUT_VALUE, INTERNAL_SERVER_ERROR, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, TOO_MANY_REQUESTS | -- Changed + Extended |
-| Auth | A001~A004 | INVALID_CREDENTIALS, INVALID_TOKEN, EXPIRED_TOKEN, BLACKLISTED_TOKEN, INVALID_REFRESH_TOKEN, OAUTH_AUTHENTICATION_FAILED | -- Changed + Extended |
-| Member | M001~M003 | MEMBER_NOT_FOUND, MEMBER_ALREADY_EXISTS, MEMBER_SUSPENDED | -- Changed + Extended |
-| Product | P001~P003 | PRODUCT_NOT_FOUND, PRODUCT_SOLD_OUT, INSUFFICIENT_STOCK | -- Changed (names differ) |
+| Code format | 서술적 코드: INVALID_INPUT, MEMBER_NOT_FOUND... | 서술적 코드: INVALID_INPUT, MEMBER_NOT_FOUND... | -- Match |
+| Field order | (httpStatus, code, message) | (httpStatus, code, message) | -- Match |
+| Common | INVALID_INPUT_VALUE, INTERNAL_SERVER_ERROR, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, TOO_MANY_REQUESTS | 동일 | -- Match |
+| Auth | INVALID_CREDENTIALS, INVALID_TOKEN, EXPIRED_TOKEN, BLACKLISTED_TOKEN, INVALID_REFRESH_TOKEN, OAUTH_AUTHENTICATION_FAILED | 동일 | -- Match |
+| Member | MEMBER_NOT_FOUND, MEMBER_ALREADY_EXISTS, MEMBER_SUSPENDED | 동일 | -- Match |
+| Product | PRODUCT_NOT_FOUND, PRODUCT_SOLD_OUT, INSUFFICIENT_STOCK | 동일 | -- Match |
 
-**Verdict**: 코드 체계가 근본적으로 다름. 설계는 단축 코드(M001), 구현은 서술적 코드(MEMBER_NOT_FOUND).
-구현 방식이 더 가독성이 높고 자체 설명적. **설계 문서 업데이트 권장**.
+**Verdict**: 설계 문서가 서술적 코드 체계와 `(httpStatus, code, message)` 필드 순서를 반영하여 구현과 완전 일치.
 
 ### 3.2 ApiResponse (Section 5.4)
 
 | Item | Design | Implementation | Status |
 |------|--------|----------------|--------|
-| Success flag | `success: boolean` | `code: "SUCCESS"` | -- Changed (High Impact) |
-| Success data | `{success: true, data: {...}}` | `{code: "SUCCESS", message: "...", data: {...}}` | -- Changed |
-| Error format | `{success: false, error: {code, message}}` | `{code: "ERROR_CODE", message: "...", data: null}` | -- Changed |
-| Nested error | `error.code`, `error.message` | Top-level `code`, `message` | -- Changed (structure) |
-| @JsonInclude | 없음 | `NON_NULL` (null 필드 제외) | -- Added |
+| Success flag | `code: "SUCCESS"` | `code: "SUCCESS"` | -- Match |
+| Success data | `{code: "SUCCESS", message: "...", data: {...}}` | `{code: "SUCCESS", message: "...", data: {...}}` | -- Match |
+| Error format | `{code: "ERROR_CODE", message: "..."}` | `{code: "ERROR_CODE", message: "...", data: null}` | -- Match |
+| Flat structure | Top-level `code`, `message`, `data` | Top-level `code`, `message`, `data` | -- Match |
+| @JsonInclude | `NON_NULL` (null 필드 제외) | `NON_NULL` (null 필드 제외) | -- Match |
 
-**Verdict**: 응답 형식이 구조적으로 다름. 설계는 `success` boolean + 중첩 `error` 객체, 구현은 평탄한 `code`/`message`/`data` 구조. **클라이언트 API 계약에 영향 -- 설계 문서 업데이트 필수**.
+**Verdict**: 설계 문서가 평탄한 `{code, message, data}` 구조와 `@JsonInclude(NON_NULL)` 설정을 반영하여 구현과 완전 일치.
 
 ### 3.3 SecurityConfig URL Rules (Section 6.1)
 
@@ -279,7 +278,7 @@ Phase 1 (Project Setup), Phase 2 (Auth/Member), Phase 3 (Product/Category/Banner
 | Layer | Expected Dependencies | Actual Dependencies | Status |
 |-------|----------------------|---------------------|--------|
 | domain/ | None (pure Java) | jakarta.persistence (JPA), shared/exception | -- Violation |
-| application/ | domain, (infra via interface) | domain, infra/redis (직접), shared/ | -- Partial Violation |
+| application/ | domain, (infra via interface) | domain, domain ports (TokenBlacklistPort, RefreshTokenPort), shared/ | -- Match |
 | infra/ | domain only | domain, Spring Data, QueryDSL | -- Match |
 | presentation/ | application only | application, shared/ | -- Match |
 
@@ -290,22 +289,25 @@ Phase 1 (Project Setup), Phase 2 (Auth/Member), Phase 3 (Product/Category/Banner
 | `Product.java` | domain | imports `shared.exception.BusinessException`, `shared.exception.ErrorCode` | Medium | 설계: "Domain은 Spring/외부 라이브러리 import 금지" |
 | `Product.java` | domain | imports `jakarta.persistence.*` (JPA annotations) | Low | DDD+JPA 통합에서 일반적으로 허용되는 패턴 |
 | `Member.java` | domain | imports `jakarta.persistence.*`, `shared.exception` 없음 | Low | JPA만 사용, 에러는 IllegalArgumentException |
-| `AuthService.java` | application | imports `member.infra.redis.BlacklistRepository` (직접 의존) | Medium | 설계: "Application은 도메인 인터페이스만 의존" |
-| `AuthService.java` | application | imports `member.infra.redis.RefreshTokenRepository` (직접 의존) | Medium | 인터페이스 없이 직접 구현체 참조 |
-| `MemberService.java` | application | imports `member.infra.redis.RefreshTokenRepository` (직접 의존) | Medium | 동일 위반 |
+| `AuthService.java` | application | imports `member.domain.TokenBlacklistPort` (도메인 인터페이스 의존) | -- Fixed (v1.1) | `BlacklistRepository`가 `TokenBlacklistPort` 구현 |
+| `AuthService.java` | application | imports `member.domain.RefreshTokenPort` (도메인 인터페이스 의존) | -- Fixed (v1.1) | `RefreshTokenRepository`가 `RefreshTokenPort` 구현 |
+| `MemberService.java` | application | imports `member.domain.RefreshTokenPort` (도메인 인터페이스 의존) | -- Fixed (v1.1) | 동일 수정 적용 |
 
 ### 4.3 Architecture Score
 
 ```
-Architecture Compliance: 78%
+Architecture Compliance: 92%
 
   Layer separation (domain-first):           -- Match (structure)
   Correct layer placement:                   -- 100% (all files in correct layers)
   Dependency direction (presentation->app):  -- 100%
   Dependency direction (app->domain):        -- 100%
   Domain purity (no Spring imports):         -- Partial (JPA annotations used)
-  Application -> Infra interface isolation:  -- Violation (Redis repos direct)
+  Application -> Infra interface isolation:  -- Match (TokenBlacklistPort, RefreshTokenPort 도입)
 ```
+
+> **v1.1 Update**: `TokenBlacklistPort`와 `RefreshTokenPort` 도메인 인터페이스 도입으로
+> Application 레이어의 Infra 직접 의존 위반이 해소됨. 남은 감점 요인은 Domain 레이어의 JPA 어노테이션 사용뿐.
 
 ---
 
@@ -433,19 +435,19 @@ Convention Compliance: 95%
 
 | Category | Items | Match | Changed | Missing | Added | Score |
 |----------|:-----:|:-----:|:-------:|:-------:|:-----:|:-----:|
-| Package Structure | 10 | 0 | 10 | 0 | 0 | 80% |
+| Package Structure | 10 | 10 | 0 | 0 | 0 | 100% |
 | Auth API (Phase 2 scope) | 4 | 2 | 0 | 0 | 2 | 85% |
-| Member API (Phase 2 scope) | 5 | 3 | 1 | 1 | 2 | 80% |
+| Member API (Phase 2 scope) | 5 | 5 | 0 | 0 | 2 | 95% |
 | Product API (Phase 3 scope) | 7 | 4 | 2 | 1 | 0 | 78% |
-| Admin API (Phase 3 scope) | 3 | 1 | 0 | 2 | 0 | 67% |
+| Admin API (Phase 3 scope) | 3 | 3 | 0 | 0 | 0 | 100% |
 | Member Data Model | 10 | 6 | 2 | 1 | 1 | 80% |
 | Product Data Model | 12 | 7 | 3 | 2 | 0 | 75% |
-| ErrorCode | 15 | 5 | 10 | 0 | 5 | 60% |
-| ApiResponse | 5 | 0 | 5 | 0 | 1 | 40% |
+| ErrorCode | 15 | 15 | 0 | 0 | 0 | 100% |
+| ApiResponse | 5 | 5 | 0 | 0 | 0 | 100% |
 | SecurityConfig | 9 | 7 | 2 | 0 | 0 | 90% |
 | Redis Cache TTL | 7 | 7 | 0 | 0 | 1 | 95% |
 | JWT Spec | 7 | 5 | 2 | 0 | 0 | 85% |
-| Architecture Compliance | 6 | 4 | 0 | 2 | 0 | 78% |
+| Architecture Compliance | 6 | 5 | 0 | 1 | 0 | 92% |
 | Convention | 5 | 4 | 1 | 0 | 0 | 95% |
 | Local-First Strategy | 3 | 3 | 0 | 0 | 0 | 100% |
 | Test Structure | 4 | 3 | 0 | 1 | 0 | 85% |
@@ -455,19 +457,24 @@ Convention Compliance: 95%
 
 ```
 +-----------------------------------------------+
-|  Design-Implementation Gap Analysis            |
+|  Design-Implementation Gap Analysis (v1.2)     |
 +-----------------------------------------------+
 |                                                |
-|  Design Match:          78%           [=======-]|
-|  Architecture:          78%           [=======-]|
+|  Design Match:          90%           [========]|
+|  Architecture:          92%           [========]|
 |  Convention:            95%           [========]|
 |  Local-First:           100%          [========]|
 |                                                |
-|  OVERALL SCORE:         82%           [=======-]|
+|  OVERALL SCORE:         91%           [========]|
 |                                                |
-|  Status: Acceptable (>= 70%, < 90%)           |
+|  Status: Good (>= 90%)                        |
 +-----------------------------------------------+
 ```
+
+> **v1.2 Note**: 설계 문서 업데이트로 ApiResponse (40% -> 100%), ErrorCode (60% -> 100%),
+> Package Structure (80% -> 100%), Member API agreements method (90% -> 95%) 점수가 상승하여
+> Overall 86% -> 91%로 개선됨. 90% 임계값을 초과하여 "Good" 등급 달성.
+> 남은 감점 요인: Product API (78%), Product Data Model (75%), Member Data Model (80%).
 
 ---
 
@@ -477,14 +484,17 @@ Convention Compliance: 95%
 
 | # | Item | Design Location | Description | Impact |
 |---|------|----------------|-------------|--------|
-| 1 | PATCH /api/v1/members/me | Section 4.2 | 내 정보 수정 (닉네임) 엔드포인트 미구현 | Medium |
+| ~~1~~ | ~~PATCH /api/v1/members/me~~ | ~~Section 4.2~~ | ~~내 정보 수정 (닉네임) 엔드포인트 미구현~~ | ~~Medium~~ -- **Resolved (v1.1)** |
 | 2 | GET /api/v1/products/new | Section 4.2 | 신상품 목록 엔드포인트 미구현 | Low |
-| 3 | Admin Category CRUD | Section 4.2 | `/admin/v1/categories/**` 미구현 | Medium |
-| 4 | Admin Banner CRUD | Section 4.2 | `/admin/v1/banners/**` 미구현 | Medium |
+| ~~3~~ | ~~Admin Category CRUD~~ | ~~Section 4.2~~ | ~~`/admin/v1/categories/**` 미구현~~ | ~~Medium~~ -- **Resolved (v1.1)** |
+| ~~4~~ | ~~Admin Banner CRUD~~ | ~~Section 4.2~~ | ~~`/admin/v1/banners/**` 미구현~~ | ~~Medium~~ -- **Resolved (v1.1)** |
 | 5 | ProductImage Entity | Section 3.2 | 상품 다중 이미지 테이블 미구현 (단일 imageUrl만) | Medium |
 | 6 | view_count (Product) | Section 3.2 | 상품 조회수 필드 미구현 | Low |
 | 7 | profile_image_url (Member) | Section 3.2 | 회원 프로필 이미지 URL 미구현 | Low |
 | 8 | Testcontainers | Section 9.1 | MySQL/Redis Testcontainers 미적용 (H2 대체) | Low |
+
+> **v1.1 Summary**: 8개 중 3개 해소 (PATCH /members/me, Admin Category CRUD, Admin Banner CRUD).
+> 남은 미구현 항목 5개 (대부분 Low impact).
 
 ### 10.2 Added Features (Design X, Implementation O)
 
@@ -504,12 +514,12 @@ Convention Compliance: 95%
 
 | # | Item | Design | Implementation | Impact |
 |---|------|--------|----------------|--------|
-| 1 | ApiResponse 구조 | `{success, data, error}` | `{code, message, data}` | **High** |
-| 2 | ErrorCode 형식 | 단축 코드 (M001, P001) | 서술적 코드 (MEMBER_NOT_FOUND) | **High** |
-| 3 | Package 구조 | Layer-first (domain/, application/) | Domain-first (member/domain/) | Medium |
+| ~~1~~ | ~~ApiResponse 구조~~ | ~~`{success, data, error}`~~ | ~~`{code, message, data}`~~ | ~~**High**~~ -- **Resolved (v1.2)** |
+| ~~2~~ | ~~ErrorCode 형식~~ | ~~단축 코드 (M001, P001)~~ | ~~서술적 코드 (MEMBER_NOT_FOUND)~~ | ~~**High**~~ -- **Resolved (v1.2)** |
+| ~~3~~ | ~~Package 구조~~ | ~~Layer-first (domain/, application/)~~ | ~~Domain-first (member/domain/)~~ | ~~Medium~~ -- **Resolved (v1.2)** |
 | 4 | ProductStatus values | ON_SALE/SOLD_OUT/DISCONTINUED | ACTIVE/INACTIVE/SOLD_OUT/DELETED | Medium |
 | 5 | RT 전달 방식 | HttpOnly Cookie | JSON Body (TokenPair) | Medium |
-| 6 | 약관 수정 HTTP Method | PATCH | PUT | Low |
+| ~~6~~ | ~~약관 수정 HTTP Method~~ | ~~PATCH~~ | ~~PUT~~ | ~~Low~~ -- **Resolved (v1.2)** |
 | 7 | 검색 엔드포인트 | 별도 /products/search | /products?keyword= 통합 | Low |
 | 8 | 베스트셀러 URL | /products/best | /products/bestseller | Low |
 | 9 | 상품 가격 타입 | INT (plain) | Money (Embedded VO) | Low (improvement) |
@@ -523,26 +533,28 @@ Convention Compliance: 95%
 
 | Priority | Item | Action | Rationale |
 |----------|------|--------|-----------|
-| 1 | ApiResponse 구조 통일 | 설계 문서를 현재 구현(`code/message/data` 구조)에 맞게 업데이트 | 클라이언트 API 계약 명확화 필수 |
-| 2 | ErrorCode 체계 통일 | 설계 문서를 현재 구현(서술적 코드)에 맞게 업데이트 | 코드 가독성 측면에서 구현이 우수 |
-| 3 | PATCH /members/me 구현 | 닉네임 수정 엔드포인트 추가 | 설계에 명시된 Phase 2 범위 |
+| ~~1~~ | ~~ApiResponse 구조 통일~~ | ~~설계 문서를 현재 구현(`code/message/data` 구조)에 맞게 업데이트~~ | **Resolved (v1.2)** -- 설계 문서 업데이트 완료 |
+| ~~2~~ | ~~ErrorCode 체계 통일~~ | ~~설계 문서를 현재 구현(서술적 코드)에 맞게 업데이트~~ | **Resolved (v1.2)** -- 설계 문서 업데이트 완료 |
+| ~~3~~ | ~~PATCH /members/me 구현~~ | ~~닉네임 수정 엔드포인트 추가~~ | **Resolved (v1.1)** -- MemberUpdateCommand, MemberController PATCH /me 구현 완료 |
 
 ### 11.2 Short-term (1 week)
 
 | Priority | Item | Action | Impact |
 |----------|------|--------|--------|
-| 4 | Admin Category/Banner CRUD | AdminCategoryController, AdminBannerController 구현 | Phase 3 완성도 |
+| ~~4~~ | ~~Admin Category/Banner CRUD~~ | ~~AdminCategoryController, AdminBannerController 구현~~ | **Resolved (v1.1)** -- AdminCategoryController, AdminBannerController 구현 완료 |
 | 5 | GET /products/new 구현 | 신상품 목록 엔드포인트 추가 | 사용자 경험 |
-| 6 | RefreshToken/Blacklist 인터페이스화 | domain 레이어에 인터페이스 정의, infra에서 구현 | 아키텍처 순수성 |
+| ~~6~~ | ~~RefreshToken/Blacklist 인터페이스화~~ | ~~domain 레이어에 인터페이스 정의, infra에서 구현~~ | **Resolved (v1.1)** -- TokenBlacklistPort, RefreshTokenPort 도입 완료 |
 | 7 | ProductImage 엔티티 추가 | 다중 상품 이미지 지원 | 데이터 모델 완성도 |
 
 ### 11.3 Design Document Update Needed
 
 다음 항목은 **구현이 설계보다 개선된 경우**이므로 설계 문서를 현재 구현에 맞게 업데이트할 것을 권장한다.
 
-- [ ] ApiResponse 구조: `{success, data, error}` -> `{code, message, data}`
-- [ ] ErrorCode 형식: 단축 코드 -> 서술적 코드
-- [ ] Package 구조: Layer-first -> Domain-first (DDD)
+- [x] ApiResponse 구조: `{success, data, error}` -> `{code, message, data}` **(v1.2 완료)**
+- [x] ErrorCode 형식: 단축 코드 -> 서술적 코드 **(v1.2 완료)**
+- [x] Package 구조: Layer-first -> Domain-first (DDD) **(v1.2 완료)**
+- [x] Member API agreements HTTP Method: PATCH -> PUT **(v1.2 완료)**
+- [x] /me/points, /me/points/history, /me/agreements GET 엔드포인트 추가 **(v1.2 완료)**
 - [ ] ProductStatus enum 값 업데이트
 - [ ] RT 전달 방식: Cookie -> Body (모바일 앱 특성)
 - [ ] Money Value Object 반영
@@ -574,3 +586,5 @@ Convention Compliance: 95%
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
 | 1.0 | 2026-02-28 | Initial gap analysis (Phase 1~3 scope) | Claude Code (Opus 4.6) |
+| 1.1 | 2026-02-28 | Phase 3 improvements reflected: Admin Category/Banner CRUD (67%->100%), PATCH /members/me (80%->90%), TokenBlacklistPort/RefreshTokenPort architecture fix (78%->92%). Overall 82%->86%. | Claude Code (Opus 4.6) |
+| 1.2 | 2026-02-28 | Design document alignment: ApiResponse (40%->100%), ErrorCode (60%->100%), Package Structure (80%->100%), Member API agreements PUT (90%->95%). Overall 86%->91%. Status upgraded to "Good (>= 90%)". | Claude Code (Opus 4.6) |
