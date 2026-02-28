@@ -73,114 +73,69 @@
 
 ### 2.2 패키지 구조
 
+> **구현 결정**: Layer-first 구조 대신 **Domain-first DDD 구조** 채택 (`{domain}/{layer}/`).
+> 도메인 응집도가 높고 DDD 원칙에 부합하는 구조.
+> `global/` → `shared/`로 네이밍 변경.
+
 ```
 src/main/java/com/saemaul/chonggak/
 │
-├── domain/                              ← [Domain Layer] 순수 Java
-│   ├── member/
-│   │   ├── Member.java                  (Aggregate Root)
-│   │   ├── MemberRepository.java        (Repository Interface)
-│   │   ├── vo/                          (Email, PhoneNumber)
-│   │   └── event/                       (MemberWithdrawnEvent)
-│   ├── product/
-│   │   ├── Product.java
-│   │   ├── ProductRepository.java
-│   │   ├── vo/                          (Money, ProductStatus)
-│   │   └── service/                     (StockDomainService)
-│   ├── order/
-│   │   ├── Order.java
-│   │   ├── OrderItem.java
-│   │   ├── OrderRepository.java
-│   │   ├── vo/                          (OrderStatus, DeliveryInfo)
-│   │   └── event/                       (OrderPlacedEvent, OrderCancelledEvent)
-│   ├── payment/
-│   │   ├── Payment.java
-│   │   ├── PaymentRepository.java
-│   │   └── event/                       (PaymentCompletedEvent)
-│   ├── coupon/
-│   │   ├── Coupon.java
-│   │   ├── UserCoupon.java
-│   │   ├── CouponRepository.java
-│   │   └── service/                     (CouponDomainService)
-│   ├── cart/
-│   │   ├── Cart.java
-│   │   ├── CartItem.java
-│   │   └── CartRepository.java
-│   └── review/
-│       ├── Review.java
-│       └── ReviewRepository.java
-│
-├── application/                         ← [Application Layer] UseCase 조율
-│   ├── auth/
+├── member/                              ← 회원/인증 도메인
+│   ├── domain/                          ← 순수 Java (Entity, Repository Interface, Domain Port)
+│   │   ├── Member.java
+│   │   ├── MemberRepository.java
+│   │   ├── MemberAgreement.java
+│   │   ├── PointHistory.java
+│   │   ├── PointHistoryRepository.java
+│   │   ├── RefreshTokenPort.java        ← 헥사고날 포트
+│   │   ├── TokenBlacklistPort.java      ← 헥사고날 포트
+│   │   ├── vo/                          (MemberRole, MemberStatus, OAuthProvider, ...)
+│   │   └── event/
+│   ├── application/                     ← UseCase (AuthService, MemberService)
 │   │   ├── AuthService.java
-│   │   └── dto/                         (SocialLoginCommand, TokenResult)
-│   ├── member/
 │   │   ├── MemberService.java
+│   │   ├── LocalSignupService.java      (@Profile local,test)
 │   │   └── dto/
-│   ├── product/
-│   │   ├── ProductService.java
-│   │   └── dto/
-│   ├── cart/
-│   │   ├── CartService.java
-│   │   └── dto/
-│   ├── order/
-│   │   ├── OrderService.java
-│   │   └── dto/
-│   ├── payment/
-│   │   ├── PaymentService.java
-│   │   └── dto/
-│   ├── coupon/
-│   │   ├── CouponService.java
-│   │   └── dto/
-│   └── notification/
-│       ├── NotificationService.java
+│   ├── infra/
+│   │   ├── persistence/                 (MemberJpaRepository, MemberRepositoryImpl)
+│   │   └── redis/                       (BlacklistRepository implements TokenBlacklistPort,
+│   │                                     RefreshTokenRepository implements RefreshTokenPort)
+│   └── presentation/
+│       ├── AuthController.java
+│       ├── MemberController.java
+│       ├── LocalAuthController.java     (@Profile local,test)
 │       └── dto/
 │
-├── infra/                               ← [Infrastructure Layer] 외부 구현체
-│   ├── persistence/
-│   │   ├── member/                      (MemberJpaRepository, MemberRepositoryImpl)
-│   │   ├── product/
-│   │   ├── order/
-│   │   └── ...
-│   ├── redis/
-│   │   ├── TokenRedisRepository.java    (RT 저장/조회/삭제)
-│   │   ├── StockRedisRepository.java    (재고 Lua Script)
-│   │   └── CouponRedisRepository.java   (쿠폰 Lua Script)
-│   ├── s3/
-│   │   └── S3ImageUploader.java
-│   ├── payment/
-│   │   └── TossPaymentClient.java
-│   ├── oauth/
-│   │   ├── KakaoOAuthClient.java
-│   │   └── NaverOAuthClient.java
-│   └── fcm/
-│       └── FcmPushSender.java
-│
-├── presentation/                        ← [Presentation Layer] Controller + DTO
-│   ├── auth/
-│   │   ├── AuthController.java
+├── product/                             ← 상품/카테고리/배너 도메인
+│   ├── domain/
+│   │   ├── Product.java
+│   │   ├── ProductCategory.java
+│   │   ├── Banner.java
+│   │   ├── ProductRepository.java
+│   │   ├── CategoryRepository.java
+│   │   ├── BannerRepository.java
+│   │   └── vo/                          (Money, ProductStatus, SortType)
+│   ├── application/
+│   │   ├── ProductService.java
 │   │   └── dto/
-│   ├── member/
-│   ├── product/
-│   ├── cart/
-│   ├── order/
-│   ├── payment/
-│   ├── coupon/
-│   ├── cs/                              (문의/FAQ/공지)
-│   ├── notification/
-│   └── admin/
+│   ├── infra/
+│   │   ├── persistence/
+│   │   └── storage/                     (FileStorage interface, LocalFileStorage)
+│   └── presentation/
+│       ├── ProductController.java       (공개 API)
 │       ├── AdminProductController.java
-│       ├── AdminOrderController.java
-│       ├── AdminMemberController.java
-│       └── ...
+│       ├── AdminCategoryController.java
+│       ├── AdminBannerController.java
+│       └── dto/
 │
-└── global/                              ← 공통
+├── [cart/order/payment/coupon/cs/notification]  ← Phase 4~10 구현 예정
+│
+└── shared/                              ← 공통 (구 global/)
     ├── config/
     │   ├── SecurityConfig.java
     │   ├── SwaggerConfig.java
     │   ├── RedisConfig.java
-    │   ├── JpaConfig.java
-    │   └── S3Config.java
+    │   └── JpaConfig.java
     ├── exception/
     │   ├── GlobalExceptionHandler.java
     │   ├── BusinessException.java
@@ -188,9 +143,9 @@ src/main/java/com/saemaul/chonggak/
     ├── response/
     │   └── ApiResponse.java
     └── security/
-        ├── JwtTokenProvider.java
+        ├── JwtProvider.java
         ├── JwtAuthenticationFilter.java
-        └── CustomUserDetails.java
+        └── UserPrincipal.java
 ```
 
 ### 2.3 레이어 의존성 규칙
@@ -479,13 +434,14 @@ CREATE TABLE notice (
 
 ### 4.1 공통 응답 형식
 
-```java
+```json
 // 성공
-{"success": true, "data": { ... }}
+{"code": "SUCCESS", "message": "요청이 성공적으로 처리되었습니다.", "data": { ... }}
 
 // 목록 (페이지네이션)
 {
-  "success": true,
+  "code": "SUCCESS",
+  "message": "요청이 성공적으로 처리되었습니다.",
   "data": {
     "content": [ ... ],
     "page": 0,
@@ -496,8 +452,8 @@ CREATE TABLE notice (
   }
 }
 
-// 실패
-{"success": false, "error": {"code": "M001", "message": "존재하지 않는 회원입니다."}}
+// 실패 (null 필드는 @JsonInclude(NON_NULL)로 제외)
+{"code": "MEMBER_NOT_FOUND", "message": "회원을 찾을 수 없습니다."}
 ```
 
 ### 4.2 전체 엔드포인트 목록
@@ -517,11 +473,13 @@ CREATE TABLE notice (
 | Method | Path | 설명 | 인증 |
 |--------|------|------|------|
 | GET | /api/v1/members/me | 내 정보 조회 | AT 필수 |
-| PATCH | /api/v1/members/me | 내 정보 수정 | AT 필수 |
+| PATCH | /api/v1/members/me | 내 정보 수정 (닉네임) | AT 필수 |
 | DELETE | /api/v1/members/me | 회원 탈퇴 | AT 필수 |
-| GET | /api/v1/members/me/points | 포인트 내역 | AT 필수 |
-| PATCH | /api/v1/members/me/agreements | 동의 항목 수정 | AT 필수 |
-| POST | /api/v1/members/fcm-tokens | FCM 토큰 등록 | AT 필수 |
+| GET | /api/v1/members/me/points | 포인트 잔액 조회 | AT 필수 |
+| GET | /api/v1/members/me/points/history | 포인트 내역 (페이지네이션) | AT 필수 |
+| GET | /api/v1/members/me/agreements | 약관 동의 목록 조회 | AT 필수 |
+| PUT | /api/v1/members/me/agreements | 동의 항목 수정 | AT 필수 |
+| POST | /api/v1/members/fcm-tokens | FCM 토큰 등록 (Phase 10) | AT 필수 |
 
 #### 상품 (Product)
 
@@ -529,11 +487,10 @@ CREATE TABLE notice (
 |--------|------|------|------|
 | GET | /api/v1/categories | 전체 카테고리 트리 | 불필요 |
 | GET | /api/v1/banners | 홈 배너 목록 | 불필요 |
-| GET | /api/v1/products | 상품 목록 (카테고리/정렬/페이지) | 불필요 |
+| GET | /api/v1/products | 상품 목록/검색 (keyword, categoryId, sort, page) | 불필요 |
 | GET | /api/v1/products/{id} | 상품 상세 | 불필요 |
-| GET | /api/v1/products/search | 상품 검색 (키워드/필터) | 불필요 |
-| GET | /api/v1/products/best | 베스트셀러 목록 | 불필요 |
-| GET | /api/v1/products/new | 신상품 목록 | 불필요 |
+| GET | /api/v1/products/bestseller | 베스트셀러 목록 (상위 20개) | 불필요 |
+| GET | /api/v1/products/new | 신상품 목록 (Phase 4) | 불필요 |
 
 #### 장바구니 (Cart)
 
@@ -737,54 +694,64 @@ CREATE TABLE notice (
 
 ### 5.1 에러 코드 정의 (ErrorCode)
 
+> **구현 결정**: 단축 코드(M001) 대신 서술적 코드(MEMBER_NOT_FOUND) 사용. 가독성 및 자체 설명성 향상.
+> 필드 순서: `(httpStatus, code, message)`
+
 ```java
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
 
     // ─── 공통 ───────────────────────────────────────────────
-    INVALID_INPUT("C001", "입력값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
-    INTERNAL_SERVER_ERROR("C002", "서버 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "잘못된 입력값입니다."),
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "서버 내부 오류가 발생했습니다."),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "인증이 필요합니다."),
+    FORBIDDEN(HttpStatus.FORBIDDEN, "FORBIDDEN", "접근 권한이 없습니다."),
+    NOT_FOUND(HttpStatus.NOT_FOUND, "NOT_FOUND", "리소스를 찾을 수 없습니다."),
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_REQUESTS", "요청이 너무 많습니다."),
 
     // ─── 인증/인가 ──────────────────────────────────────────
-    INVALID_TOKEN("A001", "유효하지 않은 토큰입니다.", HttpStatus.UNAUTHORIZED),
-    EXPIRED_TOKEN("A002", "만료된 토큰입니다.", HttpStatus.UNAUTHORIZED),
-    ACCESS_DENIED("A003", "접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
-    OAUTH_LOGIN_FAILED("A004", "소셜 로그인에 실패했습니다.", HttpStatus.BAD_GATEWAY),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "이메일 또는 비밀번호가 올바르지 않습니다."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "유효하지 않은 토큰입니다."),
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "EXPIRED_TOKEN", "만료된 토큰입니다."),
+    BLACKLISTED_TOKEN(HttpStatus.UNAUTHORIZED, "BLACKLISTED_TOKEN", "이미 로그아웃된 토큰입니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", "유효하지 않은 Refresh Token입니다."),
+    OAUTH_AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "OAUTH_FAILED", "소셜 로그인에 실패했습니다."),
 
     // ─── 회원 ───────────────────────────────────────────────
-    MEMBER_NOT_FOUND("M001", "존재하지 않는 회원입니다.", HttpStatus.NOT_FOUND),
-    MEMBER_SUSPENDED("M002", "정지된 계정입니다.", HttpStatus.FORBIDDEN),
-    MEMBER_WITHDRAWN("M003", "탈퇴한 회원입니다.", HttpStatus.FORBIDDEN),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND", "회원을 찾을 수 없습니다."),
+    MEMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "MEMBER_ALREADY_EXISTS", "이미 가입된 회원입니다."),
+    MEMBER_SUSPENDED(HttpStatus.FORBIDDEN, "MEMBER_SUSPENDED", "정지된 계정입니다."),
 
     // ─── 상품 ───────────────────────────────────────────────
-    PRODUCT_NOT_FOUND("P001", "존재하지 않는 상품입니다.", HttpStatus.NOT_FOUND),
-    OUT_OF_STOCK("P002", "재고가 부족합니다.", HttpStatus.CONFLICT),
-    PRODUCT_DISCONTINUED("P003", "판매 종료된 상품입니다.", HttpStatus.CONFLICT),
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT_NOT_FOUND", "상품을 찾을 수 없습니다."),
+    PRODUCT_SOLD_OUT(HttpStatus.CONFLICT, "PRODUCT_SOLD_OUT", "품절된 상품입니다."),
+    INSUFFICIENT_STOCK(HttpStatus.CONFLICT, "INSUFFICIENT_STOCK", "재고가 부족합니다."),
 
     // ─── 주문 ───────────────────────────────────────────────
-    ORDER_NOT_FOUND("O001", "존재하지 않는 주문입니다.", HttpStatus.NOT_FOUND),
-    ORDER_CANCEL_NOT_ALLOWED("O002", "취소할 수 없는 주문입니다.", HttpStatus.CONFLICT),
-    ORDER_ACCESS_DENIED("O003", "본인 주문만 조회할 수 있습니다.", HttpStatus.FORBIDDEN),
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER_NOT_FOUND", "주문을 찾을 수 없습니다."),
+    ORDER_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "ORDER_CANCEL_NOT_ALLOWED", "취소할 수 없는 주문 상태입니다."),
+    ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ORDER_ACCESS_DENIED", "해당 주문에 접근 권한이 없습니다."),
 
     // ─── 결제 ───────────────────────────────────────────────
-    PAYMENT_FAILED("PA001", "결제에 실패했습니다.", HttpStatus.BAD_GATEWAY),
-    PAYMENT_AMOUNT_MISMATCH("PA002", "결제 금액이 일치하지 않습니다.", HttpStatus.CONFLICT),
-    PAYMENT_NOT_FOUND("PA003", "결제 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT_FAILED", "결제에 실패했습니다."),
+    PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "PAYMENT_AMOUNT_MISMATCH", "결제 금액이 일치하지 않습니다."),
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT_NOT_FOUND", "결제 내역을 찾을 수 없습니다."),
+    PAYMENT_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "PAYMENT_UNAVAILABLE", "결제 서비스를 이용할 수 없습니다."),
 
     // ─── 쿠폰 ───────────────────────────────────────────────
-    COUPON_NOT_FOUND("CP001", "존재하지 않는 쿠폰입니다.", HttpStatus.NOT_FOUND),
-    COUPON_ALREADY_USED("CP002", "이미 사용된 쿠폰입니다.", HttpStatus.CONFLICT),
-    COUPON_EXPIRED("CP003", "만료된 쿠폰입니다.", HttpStatus.CONFLICT),
-    COUPON_OUT_OF_STOCK("CP004", "쿠폰 수량이 소진되었습니다.", HttpStatus.CONFLICT),
-    COUPON_ALREADY_ISSUED("CP005", "이미 발급된 쿠폰입니다.", HttpStatus.CONFLICT),
+    COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "COUPON_NOT_FOUND", "쿠폰을 찾을 수 없습니다."),
+    COUPON_ALREADY_USED(HttpStatus.CONFLICT, "COUPON_ALREADY_USED", "이미 사용된 쿠폰입니다."),
+    COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "COUPON_EXPIRED", "만료된 쿠폰입니다."),
+    COUPON_DEPLETED(HttpStatus.CONFLICT, "COUPON_DEPLETED", "쿠폰 수량이 소진되었습니다."),
+    COUPON_ALREADY_ISSUED(HttpStatus.CONFLICT, "COUPON_ALREADY_ISSUED", "이미 발급된 쿠폰입니다."),
 
     // ─── 장바구니 ────────────────────────────────────────────
-    CART_ITEM_NOT_FOUND("CA001", "장바구니에 없는 상품입니다.", HttpStatus.NOT_FOUND);
+    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "CART_ITEM_NOT_FOUND", "장바구니 상품을 찾을 수 없습니다.");
 
+    private final HttpStatus httpStatus;
     private final String code;
     private final String message;
-    private final HttpStatus status;
 }
 ```
 
@@ -839,33 +806,29 @@ public class GlobalExceptionHandler {
 
 ### 5.4 ApiResponse
 
+> **구현 결정**: `{success, data, error}` 중첩 구조 대신 평탄한 `{code, message, data}` 구조 채택.
+> `@JsonInclude(NON_NULL)` 적용으로 null 필드 제외.
+
 ```java
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
-    private final boolean success;
+    private final String code;
+    private final String message;
     private final T data;
-    private final ErrorInfo error;
 
-    public static <T> ApiResponse<T> ok(T data) {
-        return new ApiResponse<>(true, data, null);
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>("SUCCESS", "요청이 성공적으로 처리되었습니다.", data);
     }
 
-    public static ApiResponse<Void> ok() {
-        return new ApiResponse<>(true, null, null);
+    public static <T> ApiResponse<T> success() {
+        return new ApiResponse<>("SUCCESS", "요청이 성공적으로 처리되었습니다.", null);
     }
 
-    public static ApiResponse<Void> error(ErrorCode errorCode) {
-        return new ApiResponse<>(false, null,
-            new ErrorInfo(errorCode.getCode(), errorCode.getMessage()));
+    public static <T> ApiResponse<T> error(String code, String message) {
+        return new ApiResponse<>(code, message, null);
     }
-
-    public static ApiResponse<Void> error(ErrorCode errorCode, String message) {
-        return new ApiResponse<>(false, null,
-            new ErrorInfo(errorCode.getCode(), message));
-    }
-
-    public record ErrorInfo(String code, String message) {}
 }
 ```
 
