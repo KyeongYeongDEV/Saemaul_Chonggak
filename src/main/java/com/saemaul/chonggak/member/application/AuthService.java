@@ -4,8 +4,8 @@ import com.saemaul.chonggak.member.application.dto.LocalLoginCommand;
 import com.saemaul.chonggak.member.application.dto.TokenPair;
 import com.saemaul.chonggak.member.domain.Member;
 import com.saemaul.chonggak.member.domain.MemberRepository;
-import com.saemaul.chonggak.member.infra.redis.BlacklistRepository;
-import com.saemaul.chonggak.member.infra.redis.RefreshTokenRepository;
+import com.saemaul.chonggak.member.domain.RefreshTokenPort;
+import com.saemaul.chonggak.member.domain.TokenBlacklistPort;
 import com.saemaul.chonggak.shared.exception.BusinessException;
 import com.saemaul.chonggak.shared.exception.ErrorCode;
 import com.saemaul.chonggak.shared.security.JwtProvider;
@@ -22,8 +22,8 @@ import java.util.UUID;
 public class AuthService {
 
     private final MemberRepository memberRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final BlacklistRepository blacklistRepository;
+    private final RefreshTokenPort refreshTokenPort;
+    private final TokenBlacklistPort tokenBlacklistPort;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
 
@@ -54,12 +54,12 @@ public class AuthService {
      */
     @Transactional
     public TokenPair reissue(String refreshToken, Long userId, String deviceId) {
-        String stored = refreshTokenRepository.find(userId, deviceId)
+        String stored = refreshTokenPort.find(userId, deviceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN));
 
         if (!stored.equals(refreshToken)) {
             // RT 불일치 → 탈취 의심 → 전체 RT 삭제
-            refreshTokenRepository.deleteAll(userId);
+            refreshTokenPort.deleteAll(userId);
             throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
@@ -71,7 +71,7 @@ public class AuthService {
         }
 
         // 기존 RT 삭제 후 새 토큰 발급
-        refreshTokenRepository.delete(userId, deviceId);
+        refreshTokenPort.delete(userId, deviceId);
         return issueTokenPair(member, deviceId);
     }
 
@@ -84,14 +84,14 @@ public class AuthService {
         String jti = claims.getId();
         long remainingSeconds = jwtProvider.getRemainingSeconds(claims);
 
-        blacklistRepository.add(jti, remainingSeconds);
-        refreshTokenRepository.delete(userId, deviceId);
+        tokenBlacklistPort.add(jti, remainingSeconds);
+        refreshTokenPort.delete(userId, deviceId);
     }
 
     private TokenPair issueTokenPair(Member member, String deviceId) {
         String accessToken = jwtProvider.createAccessToken(member.getId(), member.getRole());
         String refreshToken = UUID.randomUUID().toString();
-        refreshTokenRepository.save(member.getId(), deviceId, refreshToken);
+        refreshTokenPort.save(member.getId(), deviceId, refreshToken);
         return new TokenPair(accessToken, refreshToken);
     }
 }

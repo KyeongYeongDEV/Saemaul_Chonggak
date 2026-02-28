@@ -5,7 +5,7 @@ import com.saemaul.chonggak.member.domain.Member;
 import com.saemaul.chonggak.member.domain.MemberRepository;
 import com.saemaul.chonggak.member.domain.PointHistory;
 import com.saemaul.chonggak.member.domain.PointHistoryRepository;
-import com.saemaul.chonggak.member.infra.redis.RefreshTokenRepository;
+import com.saemaul.chonggak.member.domain.RefreshTokenPort;
 import com.saemaul.chonggak.shared.exception.BusinessException;
 import com.saemaul.chonggak.shared.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PointHistoryRepository pointHistoryRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenPort refreshTokenPort;
 
     @Transactional(readOnly = true)
     public MemberResult getMyProfile(Long memberId) {
@@ -57,11 +57,18 @@ public class MemberService {
     }
 
     @Transactional
+    public MemberResult updateMyProfile(Long memberId, MemberUpdateCommand command) {
+        Member member = findActiveMember(memberId);
+        member.updateNickname(command.nickname());
+        return MemberResult.from(memberRepository.save(member));
+    }
+
+    @Transactional
     public void withdraw(Long memberId) {
         Member member = findActiveMember(memberId);
         member.withdraw();
         memberRepository.save(member);
-        refreshTokenRepository.deleteAll(memberId);
+        refreshTokenPort.deleteAll(memberId);
     }
 
     private Member findActiveMember(Long memberId) {

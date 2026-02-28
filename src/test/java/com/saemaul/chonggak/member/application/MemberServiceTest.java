@@ -4,7 +4,6 @@ import com.saemaul.chonggak.member.application.dto.*;
 import com.saemaul.chonggak.member.domain.*;
 import com.saemaul.chonggak.member.domain.vo.AgreementType;
 import com.saemaul.chonggak.member.domain.vo.PointType;
-import com.saemaul.chonggak.member.infra.redis.RefreshTokenRepository;
 import com.saemaul.chonggak.shared.exception.BusinessException;
 import com.saemaul.chonggak.shared.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +32,7 @@ class MemberServiceTest {
 
     @Mock MemberRepository memberRepository;
     @Mock PointHistoryRepository pointHistoryRepository;
-    @Mock RefreshTokenRepository refreshTokenRepository;
+    @Mock RefreshTokenPort refreshTokenPort;
 
     private Member activeMember() {
         Member m = Member.createLocalMember("test@email.com", "encodedPw", "닉네임");
@@ -76,6 +75,19 @@ class MemberServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                         .isEqualTo(ErrorCode.MEMBER_SUSPENDED));
+    }
+
+    @Test
+    @DisplayName("내 프로필 수정 - 닉네임 변경")
+    void updateMyProfile_success() {
+        Member member = activeMember();
+        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+        given(memberRepository.save(any())).willReturn(member);
+
+        MemberResult result = memberService.updateMyProfile(1L, new MemberUpdateCommand("새닉네임"));
+
+        assertThat(result.nickname()).isEqualTo("새닉네임");
+        then(memberRepository).should().save(member);
     }
 
     @Test
@@ -152,7 +164,7 @@ class MemberServiceTest {
         memberService.withdraw(1L);
 
         assertThat(member.isActive()).isFalse();
-        then(refreshTokenRepository).should().deleteAll(1L);
+        then(refreshTokenPort).should().deleteAll(1L);
         then(memberRepository).should().save(member);
     }
 }

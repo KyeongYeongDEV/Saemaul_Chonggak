@@ -66,6 +66,17 @@ public class Banner {
         return true;
     }
 
+    public void update(String title, String imageUrl, String linkUrl,
+                        int displayOrder, LocalDateTime startAt, LocalDateTime endAt) {
+        this.title = title;
+        this.imageUrl = imageUrl;
+        this.linkUrl = linkUrl;
+        this.displayOrder = displayOrder;
+        this.startAt = startAt;
+        this.endAt = endAt;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public void deactivate() {
         this.active = false;
         this.updatedAt = LocalDateTime.now();

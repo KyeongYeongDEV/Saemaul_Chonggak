@@ -74,6 +74,21 @@ class MemberControllerTest {
     }
 
     @Test
+    @DisplayName("내 프로필 수정 → 200")
+    void updateMyProfile_success() throws Exception {
+        authenticateAs(1L);
+        given(memberService.updateMyProfile(eq(1L), any())).willReturn(sampleMemberResult());
+
+        mockMvc.perform(patch("/api/v1/members/me")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("nickname", "새닉네임"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.email").value("test@email.com"));
+    }
+
+    @Test
     @DisplayName("약관 동의 목록 조회")
     void getMyAgreements_success() throws Exception {
         authenticateAs(1L);

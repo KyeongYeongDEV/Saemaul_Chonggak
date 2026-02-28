@@ -1,5 +1,6 @@
 package com.saemaul.chonggak.member.infra.redis;
 
+import com.saemaul.chonggak.member.domain.RefreshTokenPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -10,7 +11,7 @@ import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
-public class RefreshTokenRepository {
+public class RefreshTokenRepository implements RefreshTokenPort {
 
     private static final String PREFIX = "refresh:";
     private static final Duration TTL = Duration.ofDays(7);

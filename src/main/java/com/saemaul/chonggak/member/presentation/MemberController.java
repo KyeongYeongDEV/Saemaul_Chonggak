@@ -5,6 +5,7 @@ import com.saemaul.chonggak.member.application.dto.AgreementResult;
 import com.saemaul.chonggak.member.application.dto.MemberResult;
 import com.saemaul.chonggak.member.application.dto.PointHistoryResult;
 import com.saemaul.chonggak.member.presentation.dto.AgreementUpdateRequest;
+import com.saemaul.chonggak.member.presentation.dto.MemberUpdateRequest;
 import com.saemaul.chonggak.shared.response.ApiResponse;
 import com.saemaul.chonggak.shared.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +37,15 @@ public class MemberController {
     public ResponseEntity<ApiResponse<MemberResult>> getMyProfile(
             @AuthenticationPrincipal UserPrincipal principal) {
         MemberResult result = memberService.getMyProfile(principal.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @Operation(summary = "내 프로필 수정", description = "닉네임을 수정합니다.")
+    @PatchMapping("/me")
+    public ResponseEntity<ApiResponse<MemberResult>> updateMyProfile(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody MemberUpdateRequest request) {
+        MemberResult result = memberService.updateMyProfile(principal.getUserId(), request.toCommand());
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 

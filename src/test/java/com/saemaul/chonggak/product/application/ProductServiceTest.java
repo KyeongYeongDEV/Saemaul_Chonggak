@@ -150,4 +150,96 @@ class ProductServiceTest {
         assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED);
         then(productRepository).should().save(product);
     }
+
+    // ─── Category Admin ───────────────────────────────────────────
+
+    @Test
+    @DisplayName("카테고리 등록 성공")
+    void createCategory_success() {
+        ProductCategory cat = ProductCategory.create("전자기기", "전자기기 카테고리", null, 1);
+        ReflectionTestUtils.setField(cat, "id", 1L);
+        given(categoryRepository.save(any())).willReturn(cat);
+
+        CategoryResult result = productService.createCategory(
+                new com.saemaul.chonggak.product.application.dto.CategoryCreateCommand("전자기기", "전자기기 카테고리", null, 1));
+
+        assertThat(result.name()).isEqualTo("전자기기");
+        then(categoryRepository).should().save(any(ProductCategory.class));
+    }
+
+    @Test
+    @DisplayName("카테고리 수정 성공")
+    void updateCategory_success() {
+        ProductCategory cat = ProductCategory.create("의류", "의류 카테고리", null, 1);
+        ReflectionTestUtils.setField(cat, "id", 1L);
+        given(categoryRepository.findById(1L)).willReturn(Optional.of(cat));
+        given(categoryRepository.save(any())).willReturn(cat);
+
+        productService.updateCategory(1L,
+                new com.saemaul.chonggak.product.application.dto.CategoryUpdateCommand("수정된 의류", "수정 설명", 2));
+
+        assertThat(cat.getName()).isEqualTo("수정된 의류");
+        then(categoryRepository).should().save(cat);
+    }
+
+    @Test
+    @DisplayName("카테고리 삭제 - 비활성화")
+    void deleteCategory_success() {
+        ProductCategory cat = ProductCategory.create("의류", "의류 카테고리", null, 1);
+        ReflectionTestUtils.setField(cat, "id", 1L);
+        given(categoryRepository.findById(1L)).willReturn(Optional.of(cat));
+        given(categoryRepository.save(any())).willReturn(cat);
+
+        productService.deleteCategory(1L);
+
+        assertThat(cat.isActive()).isFalse();
+        then(categoryRepository).should().save(cat);
+    }
+
+    // ─── Banner Admin ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("배너 등록 성공")
+    void createBanner_success() {
+        Banner banner = Banner.create("메인 배너", "http://img.jpg", "http://link", 1, null, null);
+        ReflectionTestUtils.setField(banner, "id", 1L);
+        given(bannerRepository.save(any())).willReturn(banner);
+
+        BannerResult result = productService.createBanner(
+                new com.saemaul.chonggak.product.application.dto.BannerCreateCommand(
+                        "메인 배너", "http://img.jpg", "http://link", 1, null, null));
+
+        assertThat(result.title()).isEqualTo("메인 배너");
+        then(bannerRepository).should().save(any(Banner.class));
+    }
+
+    @Test
+    @DisplayName("배너 수정 성공")
+    void updateBanner_success() {
+        Banner banner = Banner.create("원래 배너", "http://img.jpg", "http://link", 1, null, null);
+        ReflectionTestUtils.setField(banner, "id", 1L);
+        given(bannerRepository.findById(1L)).willReturn(Optional.of(banner));
+        given(bannerRepository.save(any())).willReturn(banner);
+
+        productService.updateBanner(1L,
+                new com.saemaul.chonggak.product.application.dto.BannerUpdateCommand(
+                        "수정 배너", "http://new.jpg", "http://new-link", 2, null, null));
+
+        assertThat(banner.getTitle()).isEqualTo("수정 배너");
+        then(bannerRepository).should().save(banner);
+    }
+
+    @Test
+    @DisplayName("배너 비활성화 성공")
+    void deactivateBanner_success() {
+        Banner banner = Banner.create("메인 배너", "http://img.jpg", "http://link", 1, null, null);
+        ReflectionTestUtils.setField(banner, "id", 1L);
+        given(bannerRepository.findById(1L)).willReturn(Optional.of(banner));
+        given(bannerRepository.save(any())).willReturn(banner);
+
+        productService.deactivateBanner(1L);
+
+        assertThat(banner.isActive()).isFalse();
+        then(bannerRepository).should().save(banner);
+    }
 }

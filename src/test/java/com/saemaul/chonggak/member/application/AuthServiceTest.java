@@ -4,9 +4,9 @@ import com.saemaul.chonggak.member.application.dto.LocalLoginCommand;
 import com.saemaul.chonggak.member.application.dto.TokenPair;
 import com.saemaul.chonggak.member.domain.Member;
 import com.saemaul.chonggak.member.domain.MemberRepository;
+import com.saemaul.chonggak.member.domain.RefreshTokenPort;
+import com.saemaul.chonggak.member.domain.TokenBlacklistPort;
 import com.saemaul.chonggak.member.domain.vo.MemberRole;
-import com.saemaul.chonggak.member.infra.redis.BlacklistRepository;
-import com.saemaul.chonggak.member.infra.redis.RefreshTokenRepository;
 import com.saemaul.chonggak.shared.exception.BusinessException;
 import com.saemaul.chonggak.shared.exception.ErrorCode;
 import com.saemaul.chonggak.shared.security.JwtProvider;
@@ -33,8 +33,8 @@ class AuthServiceTest {
     @InjectMocks AuthService authService;
 
     @Mock MemberRepository memberRepository;
-    @Mock RefreshTokenRepository refreshTokenRepository;
-    @Mock BlacklistRepository blacklistRepository;
+    @Mock RefreshTokenPort refreshTokenPort;
+    @Mock TokenBlacklistPort tokenBlacklistPort;
     @Mock JwtProvider jwtProvider;
     @Mock PasswordEncoder passwordEncoder;
 
@@ -58,7 +58,7 @@ class AuthServiceTest {
 
         assertThat(result.accessToken()).isEqualTo("accessToken");
         assertThat(result.refreshToken()).isNotBlank();
-        then(refreshTokenRepository).should().save(eq(1L), eq("device-1"), anyString());
+        then(refreshTokenPort).should().save(eq(1L), eq("device-1"), anyString());
     }
 
     @Test
@@ -108,7 +108,7 @@ class AuthServiceTest {
     @DisplayName("토큰 재발급 성공 - RT Rotation")
     void reissue_success() {
         Member member = activeMember();
-        given(refreshTokenRepository.find(1L, "device-1")).willReturn(Optional.of("stored-rt"));
+        given(refreshTokenPort.find(1L, "device-1")).willReturn(Optional.of("stored-rt"));
         given(memberRepository.findById(1L)).willReturn(Optional.of(member));
         given(jwtProvider.createAccessToken(1L, MemberRole.USER)).willReturn("newAT");
 
@@ -116,27 +116,27 @@ class AuthServiceTest {
 
         assertThat(result.accessToken()).isEqualTo("newAT");
         assertThat(result.refreshToken()).isNotBlank();
-        then(refreshTokenRepository).should().delete(1L, "device-1");       // 기존 RT 삭제
-        then(refreshTokenRepository).should().save(eq(1L), eq("device-1"), anyString()); // 새 RT 저장
+        then(refreshTokenPort).should().delete(1L, "device-1");       // 기존 RT 삭제
+        then(refreshTokenPort).should().save(eq(1L), eq("device-1"), anyString()); // 새 RT 저장
     }
 
     @Test
     @DisplayName("RT 불일치 → INVALID_REFRESH_TOKEN + 전체 RT 삭제 (탈취 의심)")
     void reissue_mismatchRT_deletesAll() {
-        given(refreshTokenRepository.find(1L, "device-1")).willReturn(Optional.of("stored-rt"));
+        given(refreshTokenPort.find(1L, "device-1")).willReturn(Optional.of("stored-rt"));
 
         assertThatThrownBy(() -> authService.reissue("other-rt", 1L, "device-1"))
                 .isInstanceOf(BusinessException.class)
                 .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                         .isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN));
 
-        then(refreshTokenRepository).should().deleteAll(1L); // 전체 기기 RT 삭제
+        then(refreshTokenPort).should().deleteAll(1L); // 전체 기기 RT 삭제
     }
 
     @Test
     @DisplayName("RT 없음 (이미 로그아웃) → INVALID_REFRESH_TOKEN")
     void reissue_rtNotFound() {
-        given(refreshTokenRepository.find(anyLong(), anyString())).willReturn(Optional.empty());
+        given(refreshTokenPort.find(anyLong(), anyString())).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> authService.reissue("rt", 1L, "device-1"))
                 .isInstanceOf(BusinessException.class)
@@ -156,7 +156,7 @@ class AuthServiceTest {
 
         authService.logout("accessToken", 1L, "device-1");
 
-        then(blacklistRepository).should().add("jti-123", 1800L);
-        then(refreshTokenRepository).should().delete(1L, "device-1");
+        then(tokenBlacklistPort).should().add("jti-123", 1800L);
+        then(refreshTokenPort).should().delete(1L, "device-1");
     }
 }

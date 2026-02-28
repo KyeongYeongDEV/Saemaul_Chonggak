@@ -105,4 +105,63 @@ public class ProductService {
         product.changeStatus(ProductStatus.DELETED);
         productRepository.save(product);
     }
+
+    // ─── Admin: Category ────────────────────────────────────────────
+
+    @Transactional
+    @CacheEvict(value = "category", allEntries = true)
+    public CategoryResult createCategory(CategoryCreateCommand command) {
+        ProductCategory category = ProductCategory.create(
+                command.name(), command.description(),
+                command.parentCategoryId(), command.displayOrder());
+        return CategoryResult.from(categoryRepository.save(category));
+    }
+
+    @Transactional
+    @CacheEvict(value = "category", allEntries = true)
+    public CategoryResult updateCategory(Long categoryId, CategoryUpdateCommand command) {
+        ProductCategory category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+        category.update(command.name(), command.description(), command.displayOrder());
+        return CategoryResult.from(categoryRepository.save(category));
+    }
+
+    @Transactional
+    @CacheEvict(value = "category", allEntries = true)
+    public void deleteCategory(Long categoryId) {
+        ProductCategory category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+        category.deactivate();
+        categoryRepository.save(category);
+    }
+
+    // ─── Admin: Banner ──────────────────────────────────────────────
+
+    @Transactional
+    @CacheEvict(value = "banner", allEntries = true)
+    public BannerResult createBanner(BannerCreateCommand command) {
+        Banner banner = Banner.create(
+                command.title(), command.imageUrl(), command.linkUrl(),
+                command.displayOrder(), command.startAt(), command.endAt());
+        return BannerResult.from(bannerRepository.save(banner));
+    }
+
+    @Transactional
+    @CacheEvict(value = "banner", allEntries = true)
+    public BannerResult updateBanner(Long bannerId, BannerUpdateCommand command) {
+        Banner banner = bannerRepository.findById(bannerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+        banner.update(command.title(), command.imageUrl(), command.linkUrl(),
+                command.displayOrder(), command.startAt(), command.endAt());
+        return BannerResult.from(bannerRepository.save(banner));
+    }
+
+    @Transactional
+    @CacheEvict(value = "banner", allEntries = true)
+    public void deactivateBanner(Long bannerId) {
+        Banner banner = bannerRepository.findById(bannerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+        banner.deactivate();
+        bannerRepository.save(banner);
+    }
 }
