@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -104,6 +104,6 @@ class SQLUserCouponRepository(UserCouponRepository):
     async def mark_used(self, user_coupon_id: int, order_id: int) -> None:
         await self._s.execute(
             update(UserCouponModel).where(UserCouponModel.id == user_coupon_id).values(
-                is_used=True, used_at=datetime.utcnow(), order_id=order_id,
+                is_used=True, used_at=datetime.now(timezone.utc), order_id=order_id,
             )
         )

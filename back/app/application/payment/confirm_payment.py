@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
-from app.core.exceptions import AmountMismatchError, OrderNotFoundError, PaymentFailedError
+from app.core.exceptions import AmountMismatchError, OrderNotFoundError
 from app.domain.order.entities import OrderStatus
 from app.domain.order.repository import OrderRepository
 from app.domain.payment.entities import PaymentStatus
@@ -51,31 +51,37 @@ class ConfirmPaymentUseCase:
         if not payment:
             raise OrderNotFoundError()
 
-        # 2. 금액 검증 (도메인 엔티티에서 처리)
+        # 2. 이중 결제 방어 — 이미 완료된 결제면 멱등성 응답
+        if payment.status == PaymentStatus.DONE:
+            return ConfirmPaymentResult(
+                order_no=order.order_no, amount=payment.amount, method=payment.method
+            )
+
+        # 3. 금액 검증 (도메인 엔티티에서 처리) — 클라이언트 금액 절대 신뢰 금지
         try:
             payment.verify_amount(cmd.amount)
         except AmountMismatchException:
             raise AmountMismatchError()
 
-        # 3. 토스 결제 승인 API 호출
+        # 4. 토스 결제 승인 API 호출
         raw = await self._toss.confirm(cmd.payment_key, cmd.order_no, payment.amount)
 
-        # 4. 상태 업데이트
+        # 5. DB 상태 업데이트 (토스 성공 후 즉시)
+        now = datetime.now(timezone.utc)
         payment.payment_key = cmd.payment_key
         payment.status = PaymentStatus.DONE
         payment.method = raw.get("method")
-        payment.approved_at = datetime.utcnow()
+        payment.approved_at = now
         payment.raw_response = raw
         await self._payment_repo.update(payment)
 
         order.status = OrderStatus.PAID
         await self._order_repo.update(order)
 
-        # 5. 장바구니 비우기
-        from app.infrastructure.cache.cart_repo import RedisCartRepository
+        # 6. 장바구니 캐시 무효화
         await self._cache.invalidate(f"cart:{user_id}")
 
-        # 6. 포인트 적립 (결제액의 1%)
+        # 7. 포인트 적립 (결제액의 1%)
         user = await self._user_repo.get_by_id(user_id)
         if user:
             user.earn_point(int(payment.amount * 0.01))

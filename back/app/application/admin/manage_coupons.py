@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.domain.coupon.entities import Coupon, CouponType
 from app.domain.coupon.repository import CouponRepository
@@ -43,11 +43,11 @@ class AdminCouponUseCase:
             discount_value=cmd.discount_value, min_order_amount=cmd.min_order_amount,
             max_discount=cmd.max_discount, total_stock=cmd.total_stock, issued_count=0,
             started_at=cmd.started_at, expired_at=cmd.expired_at, is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         saved = await self._repo.save(coupon)
         # Redis에 재고 초기화
-        ttl = int((cmd.expired_at - datetime.utcnow()).total_seconds())
+        ttl = int((cmd.expired_at - datetime.now(timezone.utc)).total_seconds())
         if ttl > 0:
             await self._cache.init_stock(f"coupon:stock:{cmd.code}", cmd.total_stock, ttl)
         await self._audit.write(

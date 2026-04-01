@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from app.domain.coupon.exceptions import CouponExpiredException
@@ -27,7 +27,7 @@ class Coupon:
     created_at: datetime
 
     def is_valid(self) -> bool:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         return self.is_active and self.started_at <= now <= self.expired_at
 
     def calculate_discount(self, order_amount: int) -> int:

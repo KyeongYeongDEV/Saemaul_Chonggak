@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.domain.product.entities import Banner
 from app.domain.product.repository import BannerRepository
@@ -35,7 +35,7 @@ class AdminBannerUseCase:
         banner = Banner(
             id=None, title=cmd.title, image_url=cmd.image_url, link_url=cmd.link_url,
             sort_order=cmd.sort_order, is_active=cmd.is_active,
-            started_at=cmd.started_at, ended_at=cmd.ended_at, created_at=datetime.utcnow(),
+            started_at=cmd.started_at, ended_at=cmd.ended_at, created_at=datetime.now(timezone.utc),
         )
         saved = await self._repo.save(banner)
         await self._audit.write(
@@ -49,7 +49,7 @@ class AdminBannerUseCase:
         banner = Banner(
             id=banner_id, title=cmd.title, image_url=cmd.image_url, link_url=cmd.link_url,
             sort_order=cmd.sort_order, is_active=cmd.is_active,
-            started_at=cmd.started_at, ended_at=cmd.ended_at, created_at=datetime.utcnow(),
+            started_at=cmd.started_at, ended_at=cmd.ended_at, created_at=datetime.now(timezone.utc),
         )
         updated = await self._repo.update(banner)
         await self._cache.invalidate("banner:list")

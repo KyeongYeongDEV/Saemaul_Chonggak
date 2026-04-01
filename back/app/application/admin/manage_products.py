@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.exceptions import ProductNotFoundError
 from app.domain.product.entities import Product
@@ -53,7 +53,7 @@ class AdminProductUseCase:
             price=cmd.price, sale_price=cmd.sale_price, stock=cmd.stock,
             thumbnail_url=cmd.thumbnail_url, is_active=True,
             is_time_sale=False, time_sale_start=None, time_sale_end=None,
-            time_sale_price=None, time_sale_stock=None, created_at=datetime.utcnow(),
+            time_sale_price=None, time_sale_stock=None, created_at=datetime.now(timezone.utc),
         )
         saved = await self._repo.save(product)
         await self._audit.write(

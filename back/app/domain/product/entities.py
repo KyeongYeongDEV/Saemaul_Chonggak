@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.domain.product.exceptions import OutOfStockException
 
@@ -56,7 +56,7 @@ class Product:
 
     def effective_price(self) -> int:
         """타임세일 > 할인가 > 원가 순."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if (
             self.is_time_sale
             and self.time_sale_price is not None

@@ -17,13 +17,18 @@ class TossPaymentAdapter:
 
     async def confirm(self, payment_key: str, order_no: str, amount: int) -> dict:
         """결제 승인 API 호출."""
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                f"{TOSS_API_BASE}/{payment_key}",
-                headers=self._auth_header(),
-                json={"paymentKey": payment_key, "orderId": order_no, "amount": amount},
-                timeout=10.0,
-            )
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{TOSS_API_BASE}/{payment_key}",
+                    headers=self._auth_header(),
+                    json={"paymentKey": payment_key, "orderId": order_no, "amount": amount},
+                    timeout=10.0,
+                )
+        except httpx.TimeoutException:
+            raise PaymentFailedError("토스페이먼츠 응답 시간 초과")
+        except httpx.RequestError as e:
+            raise PaymentFailedError(f"토스페이먼츠 네트워크 오류: {e}")
         if resp.status_code != 200:
             data = resp.json()
             raise PaymentFailedError(data.get("message", "토스페이먼츠 결제 승인 실패"))
@@ -34,13 +39,18 @@ class TossPaymentAdapter:
         body: dict = {"cancelReason": cancel_reason}
         if cancel_amount is not None:
             body["cancelAmount"] = cancel_amount
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                f"{TOSS_API_BASE}/{payment_key}/cancel",
-                headers=self._auth_header(),
-                json=body,
-                timeout=10.0,
-            )
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{TOSS_API_BASE}/{payment_key}/cancel",
+                    headers=self._auth_header(),
+                    json=body,
+                    timeout=10.0,
+                )
+        except httpx.TimeoutException:
+            raise PaymentFailedError("토스페이먼츠 취소 응답 시간 초과")
+        except httpx.RequestError as e:
+            raise PaymentFailedError(f"토스페이먼츠 네트워크 오류: {e}")
         if resp.status_code != 200:
             data = resp.json()
             raise PaymentFailedError(data.get("message", "토스페이먼츠 결제 취소 실패"))

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,7 +22,7 @@ class GetDashboardUseCase:
         self._cache = cache
 
     async def execute(self) -> DashboardResult:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         year_month = now.strftime("%Y-%m")
         mau = await self._cache.get_mau(year_month)
 

@@ -24,8 +24,11 @@ async def get_current_user_id(
     if payload.get("type") != "access":
         raise UnauthorizedError("액세스 토큰이 아닙니다.")
 
+    # jti 없는 토큰은 블랙리스트 우회 가능 → 반드시 존재해야 함
     jti = payload.get("jti")
-    if jti and await redis.exists(f"blacklist:access:{jti}"):
+    if not jti:
+        raise UnauthorizedError("유효하지 않은 토큰입니다.")
+    if await redis.exists(f"blacklist:access:{jti}"):
         raise UnauthorizedError("로그아웃된 토큰입니다.")
 
     return int(payload["sub"])
@@ -47,7 +50,9 @@ async def get_current_user_payload(
         raise UnauthorizedError("액세스 토큰이 아닙니다.")
 
     jti = payload.get("jti")
-    if jti and await redis.exists(f"blacklist:access:{jti}"):
+    if not jti:
+        raise UnauthorizedError("유효하지 않은 토큰입니다.")
+    if await redis.exists(f"blacklist:access:{jti}"):
         raise UnauthorizedError("로그아웃된 토큰입니다.")
 
     return payload

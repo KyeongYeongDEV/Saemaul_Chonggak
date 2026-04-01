@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +19,7 @@ class GetStatsUseCase:
         self._session = session
 
     async def execute(self, days: int = 7) -> StatsResult:
-        start = datetime.utcnow() - timedelta(days=days)
+        start = datetime.now(timezone.utc) - timedelta(days=days)
 
         # 일별 매출
         daily_q = (

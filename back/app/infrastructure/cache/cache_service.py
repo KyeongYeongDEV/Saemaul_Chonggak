@@ -33,9 +33,14 @@ class CacheService:
         await self._r.delete(key)
 
     async def invalidate_pattern(self, pattern: str) -> None:
-        keys = await self._r.keys(pattern)
-        if keys:
-            await self._r.delete(*keys)
+        # KEYS 대신 SCAN 사용 — KEYS는 Redis 단일 스레드 블로킹으로 운영 장애 유발
+        cursor = 0
+        while True:
+            cursor, keys = await self._r.scan(cursor, match=pattern, count=100)
+            if keys:
+                await self._r.delete(*keys)
+            if cursor == 0:
+                break
 
     async def atomic_decr_stock(self, key: str) -> int:
         """재고 원자적 감소. 재고 없으면 -1 반환."""

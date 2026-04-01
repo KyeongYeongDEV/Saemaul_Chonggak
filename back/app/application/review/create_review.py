@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.exceptions import AlreadyReviewedError, ForbiddenError, OrderNotFoundError
 from app.domain.order.entities import OrderStatus
@@ -42,6 +42,6 @@ class CreateReviewUseCase:
         review = Review(
             id=None, user_id=cmd.user_id, product_id=cmd.product_id,
             order_id=cmd.order_id, rating=cmd.rating, content=cmd.content,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         return await self._review_repo.save(review)

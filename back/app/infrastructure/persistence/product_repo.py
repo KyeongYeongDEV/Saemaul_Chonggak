@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -104,7 +104,7 @@ class SQLProductRepository(ProductRepository):
         return [_to_product(m) for m in result.scalars()], total or 0
 
     async def list_time_sale(self) -> list[Product]:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         result = await self._s.execute(
             select(ProductModel)
             .options(selectinload(ProductModel.images))
@@ -156,7 +156,7 @@ class SQLBannerRepository(BannerRepository):
         self._s = session
 
     async def list_active(self) -> list[Banner]:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         result = await self._s.execute(
             select(BannerModel).where(
                 BannerModel.is_active == True,

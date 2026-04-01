@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.exceptions import DuplicateEmailError
 from app.core.security import hash_password
@@ -40,7 +40,7 @@ class RegisterUseCase:
             role=UserRole.USER,
             is_active=True,
             point=0,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         saved = await self._user_repo.save(user)
         return RegisterResult(id=saved.id, email=saved.email, name=saved.name)

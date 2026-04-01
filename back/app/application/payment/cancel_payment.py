@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
-from app.core.exceptions import ForbiddenError, OrderNotFoundError
+from app.core.exceptions import ForbiddenError, OrderNotFoundError, PaymentFailedError
 from app.domain.order.entities import OrderStatus
 from app.domain.order.repository import OrderRepository
 from app.domain.payment.entities import PaymentStatus
@@ -32,14 +32,19 @@ class CancelPaymentUseCase:
         if not order or order.user_id != cmd.user_id:
             raise OrderNotFoundError()
 
-        order.cancel()
-
         payment = await self._payment_repo.get_by_order_id(order.id)
+
+        # 결제 취소가 필요한 경우: 토스 환불 먼저, 성공 후 DB 업데이트
         if payment and payment.payment_key and payment.status == PaymentStatus.DONE:
+            # 토스 환불 실패 시 예외 전파 → order 상태 변경 없음
             await self._toss.cancel(payment.payment_key, cmd.cancel_reason)
+
+            now = datetime.now(timezone.utc)
             payment.status = PaymentStatus.CANCELLED
-            payment.cancelled_at = datetime.utcnow()
+            payment.cancelled_at = now
             payment.cancel_reason = cmd.cancel_reason
             await self._payment_repo.update(payment)
 
+        # 토스 환불 완료 후 주문 상태 변경
+        order.cancel()
         await self._order_repo.update(order)
