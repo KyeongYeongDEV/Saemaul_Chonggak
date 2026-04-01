@@ -16,6 +16,9 @@ class UserRepository(ABC):
     @abstractmethod
     async def update(self, user: User) -> User: ...
 
+    @abstractmethod
+    async def list_paginated(self, page: int, size: int) -> tuple[list[User], int]: ...
+
 
 class UserAddressRepository(ABC):
     @abstractmethod

@@ -27,7 +27,7 @@ class ListProductsUseCase:
         self._cache = cache
 
     async def execute(self, cmd: ListProductsCommand) -> ListProductsResult:
-        cache_key = f"product:list:{cmd.category_id}:{cmd.page}:{cmd.sort}"
+        cache_key = f"product:list:{cmd.category_id}:{cmd.page}:{cmd.size}:{cmd.sort}"
 
         async def load():
             items, total = await self._repo.list(cmd.page, cmd.size, cmd.category_id, cmd.sort)

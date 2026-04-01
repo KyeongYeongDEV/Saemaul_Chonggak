@@ -1,4 +1,4 @@
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.user.entities import User, UserAddress, UserRole
@@ -75,6 +75,18 @@ class SQLUserRepository(UserRepository):
             )
         )
         return user
+
+    async def list_paginated(self, page: int, size: int) -> tuple[list[User], int]:
+        q = (
+            select(UserModel)
+            .order_by(UserModel.created_at.desc())
+            .offset((page - 1) * size)
+            .limit(size)
+        )
+        count_q = select(func.count()).select_from(UserModel)
+        result = await self._s.execute(q)
+        total = await self._s.scalar(count_q)
+        return [_to_user(m) for m in result.scalars()], total or 0
 
 
 class SQLUserAddressRepository(UserAddressRepository):

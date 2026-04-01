@@ -90,7 +90,7 @@ async def confirm_payment(
         _toss, CacheService(redis),
     )
     result = await use_case.execute(
-        ConfirmPaymentCommand(payment_key=body.payment_key, order_no=body.order_no, amount=body.amount),
+        ConfirmPaymentCommand(payment_key=body.payment_key, order_no=body.order_no),
         user_id=user_id,
     )
     return ApiResponse(data=ConfirmPaymentResponse(

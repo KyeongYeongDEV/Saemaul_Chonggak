@@ -7,6 +7,7 @@ from app.application.cs.list_inquiries import ListInquiriesUseCase
 from app.core.dependencies import get_current_user_id
 from app.infrastructure.persistence.cs_repo import SQLInquiryRepository
 from app.infrastructure.persistence.database import get_db
+from app.infrastructure.persistence.order_repo import SQLOrderRepository
 from app.presentation.schemas.common import ApiResponse, PaginatedData
 
 router = APIRouter(prefix="/inquiries", tags=["CS"])
@@ -49,7 +50,7 @@ async def create_inquiry(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    inquiry_id = await CreateInquiryUseCase(SQLInquiryRepository(db)).execute(
+    inquiry_id = await CreateInquiryUseCase(SQLInquiryRepository(db), SQLOrderRepository(db)).execute(
         CreateInquiryCommand(
             user_id=user_id,
             order_id=body.order_id,
