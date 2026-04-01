@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.application.admin.get_stats import GetStatsUseCase
 from app.core.dependencies import require_admin
 from app.infrastructure.persistence.database import get_db
+from app.infrastructure.persistence.order_repo import SQLOrderRepository
 from app.presentation.schemas.common import ApiResponse
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -15,7 +16,7 @@ async def get_stats(
     admin: dict = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await GetStatsUseCase(db).execute(days)
+    result = await GetStatsUseCase(SQLOrderRepository(db)).execute(days)
     return ApiResponse(data={
         "daily_sales": result.daily_sales,
         "total_revenue": result.total_revenue,

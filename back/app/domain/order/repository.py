@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from app.domain.order.entities import Order
 
@@ -30,3 +31,23 @@ class OrderRepository(ABC):
 
     @abstractmethod
     async def update(self, order: Order) -> Order: ...
+
+    @abstractmethod
+    async def sum_sales_since(self, since: datetime, statuses: list[str]) -> int: ...
+
+    @abstractmethod
+    async def count_since(self, since: datetime) -> int: ...
+
+    @abstractmethod
+    async def count_by_status(self, status: str) -> int: ...
+
+    @abstractmethod
+    async def daily_sales(
+        self, since: datetime, exclude_statuses: list[str]
+    ) -> list[dict]: ...
+
+    @abstractmethod
+    async def sum_total_revenue(self, exclude_statuses: list[str]) -> int: ...
+
+    @abstractmethod
+    async def count_total_orders(self, exclude_statuses: list[str]) -> int: ...

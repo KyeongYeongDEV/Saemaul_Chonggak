@@ -1,9 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.infrastructure.persistence.models import NoticeModel
+from app.domain.cs.repository import NoticeRepository
 
 
 @dataclass
@@ -22,22 +19,19 @@ class NoticeListResult:
 
 
 class ListNoticesUseCase:
-    def __init__(self, session: AsyncSession):
-        self._session = session
+    def __init__(self, notice_repo: NoticeRepository):
+        self._repo = notice_repo
 
     async def execute(self, page: int, size: int) -> NoticeListResult:
-        q = (
-            select(NoticeModel)
-            .where(NoticeModel.is_active == True)
-            .order_by(NoticeModel.is_pinned.desc(), NoticeModel.created_at.desc())
-            .offset((page - 1) * size)
-            .limit(size)
-        )
-        count_q = select(func.count()).select_from(NoticeModel).where(NoticeModel.is_active == True)
-        result = await self._session.execute(q)
-        total = await self._session.scalar(count_q)
+        notices, total = await self._repo.list_active(page, size)
         items = [
-            NoticeItem(id=m.id, title=m.title, content=m.content, is_pinned=m.is_pinned, created_at=str(m.created_at))
-            for m in result.scalars()
+            NoticeItem(
+                id=n.id,
+                title=n.title,
+                content=n.content,
+                is_pinned=n.is_pinned,
+                created_at=str(n.created_at),
+            )
+            for n in notices
         ]
-        return NoticeListResult(items=items, total=total or 0)
+        return NoticeListResult(items=items, total=total)

@@ -14,6 +14,7 @@ from app.presentation.admin import dashboard, orders as admin_orders
 from app.presentation.admin import products as admin_products
 from app.presentation.admin import stats
 from app.presentation.admin import users as admin_users
+from app.presentation.middleware.activity_tracker import ActivityTrackerMiddleware
 
 
 @asynccontextmanager
@@ -39,6 +40,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# MAU 추적 미들웨어
+app.add_middleware(ActivityTrackerMiddleware)
 
 
 # 공통 에러 핸들러

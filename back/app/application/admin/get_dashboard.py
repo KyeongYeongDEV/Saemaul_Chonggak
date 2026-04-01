@@ -1,11 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.domain.order.repository import OrderRepository
 from app.infrastructure.cache.cache_service import CacheService
-from app.infrastructure.persistence.models import OrderModel, UserModel
 
 
 @dataclass
@@ -16,9 +13,12 @@ class DashboardResult:
     pending_orders: int
 
 
+_PAID_STATUSES = ["paid", "preparing", "shipping", "delivered", "confirmed"]
+
+
 class GetDashboardUseCase:
-    def __init__(self, session: AsyncSession, cache: CacheService):
-        self._session = session
+    def __init__(self, order_repo: OrderRepository, cache: CacheService):
+        self._order_repo = order_repo
         self._cache = cache
 
     async def execute(self) -> DashboardResult:
@@ -27,20 +27,9 @@ class GetDashboardUseCase:
         mau = await self._cache.get_mau(year_month)
 
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        sales_q = select(func.coalesce(func.sum(OrderModel.final_amount), 0)).where(
-            OrderModel.status.in_(["paid", "preparing", "shipping", "delivered", "confirmed"]),
-            OrderModel.created_at >= today_start,
-        )
-        order_count_q = select(func.count()).select_from(OrderModel).where(
-            OrderModel.created_at >= today_start
-        )
-        pending_q = select(func.count()).select_from(OrderModel).where(
-            OrderModel.status == "pending"
-        )
-
-        total_sales_today = await self._session.scalar(sales_q) or 0
-        total_orders_today = await self._session.scalar(order_count_q) or 0
-        pending_orders = await self._session.scalar(pending_q) or 0
+        total_sales_today = await self._order_repo.sum_sales_since(today_start, _PAID_STATUSES)
+        total_orders_today = await self._order_repo.count_since(today_start)
+        pending_orders = await self._order_repo.count_by_status("pending")
 
         return DashboardResult(
             mau=mau,

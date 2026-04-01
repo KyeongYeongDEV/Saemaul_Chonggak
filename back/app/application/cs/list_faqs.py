@@ -1,9 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.infrastructure.persistence.models import FaqModel
+from app.domain.cs.repository import FaqRepository
 
 
 @dataclass
@@ -16,14 +13,18 @@ class FaqItem:
 
 
 class ListFaqsUseCase:
-    def __init__(self, session: AsyncSession):
-        self._session = session
+    def __init__(self, faq_repo: FaqRepository):
+        self._repo = faq_repo
 
     async def execute(self) -> list[FaqItem]:
-        result = await self._session.execute(
-            select(FaqModel).where(FaqModel.is_active == True).order_by(FaqModel.sort_order)
-        )
+        faqs = await self._repo.list_active()
         return [
-            FaqItem(id=m.id, category=m.category, question=m.question, answer=m.answer, sort_order=m.sort_order)
-            for m in result.scalars()
+            FaqItem(
+                id=f.id,
+                category=f.category,
+                question=f.question,
+                answer=f.answer,
+                sort_order=f.sort_order,
+            )
+            for f in faqs
         ]

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -112,3 +114,47 @@ class SQLOrderRepository(OrderRepository):
             update(OrderModel).where(OrderModel.id == order.id).values(status=order.status.value)
         )
         return order
+
+    async def sum_sales_since(self, since: datetime, statuses: list[str]) -> int:
+        q = select(func.coalesce(func.sum(OrderModel.final_amount), 0)).where(
+            OrderModel.status.in_(statuses),
+            OrderModel.created_at >= since,
+        )
+        return await self._s.scalar(q) or 0
+
+    async def count_since(self, since: datetime) -> int:
+        q = select(func.count()).select_from(OrderModel).where(OrderModel.created_at >= since)
+        return await self._s.scalar(q) or 0
+
+    async def count_by_status(self, status: str) -> int:
+        q = select(func.count()).select_from(OrderModel).where(OrderModel.status == status)
+        return await self._s.scalar(q) or 0
+
+    async def daily_sales(self, since: datetime, exclude_statuses: list[str]) -> list[dict]:
+        q = (
+            select(
+                func.date(OrderModel.created_at).label("date"),
+                func.count(OrderModel.id).label("orders"),
+                func.coalesce(func.sum(OrderModel.final_amount), 0).label("revenue"),
+            )
+            .where(
+                OrderModel.created_at >= since,
+                OrderModel.status.notin_(exclude_statuses),
+            )
+            .group_by(func.date(OrderModel.created_at))
+            .order_by(func.date(OrderModel.created_at))
+        )
+        result = await self._s.execute(q)
+        return [{"date": str(r.date), "orders": r.orders, "revenue": r.revenue} for r in result]
+
+    async def sum_total_revenue(self, exclude_statuses: list[str]) -> int:
+        q = select(func.coalesce(func.sum(OrderModel.final_amount), 0)).where(
+            OrderModel.status.notin_(exclude_statuses)
+        )
+        return await self._s.scalar(q) or 0
+
+    async def count_total_orders(self, exclude_statuses: list[str]) -> int:
+        q = select(func.count()).select_from(OrderModel).where(
+            OrderModel.status.notin_(exclude_statuses)
+        )
+        return await self._s.scalar(q) or 0

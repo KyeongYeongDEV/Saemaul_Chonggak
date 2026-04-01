@@ -1,9 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.infrastructure.persistence.models import InquiryModel
+from app.domain.cs.repository import InquiryRepository
 
 
 @dataclass
@@ -22,22 +19,19 @@ class InquiryListResult:
 
 
 class ListInquiriesUseCase:
-    def __init__(self, session: AsyncSession):
-        self._session = session
+    def __init__(self, inquiry_repo: InquiryRepository):
+        self._repo = inquiry_repo
 
     async def execute(self, user_id: int, page: int, size: int) -> InquiryListResult:
-        q = (
-            select(InquiryModel)
-            .where(InquiryModel.user_id == user_id)
-            .order_by(InquiryModel.created_at.desc())
-            .offset((page - 1) * size)
-            .limit(size)
-        )
-        count_q = select(func.count()).select_from(InquiryModel).where(InquiryModel.user_id == user_id)
-        result = await self._session.execute(q)
-        total = await self._session.scalar(count_q)
+        inquiries, total = await self._repo.list_by_user(user_id, page, size)
         items = [
-            InquiryItem(id=m.id, title=m.title, status=m.status, answer=m.answer, created_at=str(m.created_at))
-            for m in result.scalars()
+            InquiryItem(
+                id=i.id,
+                title=i.title,
+                status=i.status,
+                answer=i.answer,
+                created_at=str(i.created_at),
+            )
+            for i in inquiries
         ]
-        return InquiryListResult(items=items, total=total or 0)
+        return InquiryListResult(items=items, total=total)

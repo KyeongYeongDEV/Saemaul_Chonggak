@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.payment.cancel_payment import CancelPaymentCommand, CancelPaymentUseCase
 from app.application.payment.confirm_payment import ConfirmPaymentCommand, ConfirmPaymentUseCase
+from app.application.payment.get_payments import GetPaymentsUseCase
 from app.application.payment.prepare_payment import PreparePaymentCommand, PreparePaymentUseCase
 from app.core.dependencies import get_current_user_id
 from app.infrastructure.cache.cache_service import CacheService
@@ -15,7 +16,7 @@ from app.infrastructure.persistence.order_repo import SQLOrderRepository
 from app.infrastructure.persistence.payment_repo import SQLPaymentRepository
 from app.infrastructure.persistence.product_repo import SQLProductRepository
 from app.infrastructure.persistence.user_repo import SQLUserAddressRepository, SQLUserRepository
-from app.presentation.schemas.common import ApiResponse
+from app.presentation.schemas.common import ApiResponse, PaginatedData
 from app.presentation.schemas.payment import (
     CancelPaymentRequest,
     ConfirmPaymentRequest,
@@ -26,6 +27,34 @@ from app.presentation.schemas.payment import (
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 _toss = TossPaymentAdapter()
+
+
+@router.get("", response_model=ApiResponse[PaginatedData[dict]])
+async def get_payments(
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=50),
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await GetPaymentsUseCase(SQLPaymentRepository(db)).execute(user_id, page, size)
+    return ApiResponse(data=PaginatedData(
+        items=[
+            {
+                "id": p.id,
+                "order_no": p.order_no,
+                "payment_key": p.payment_key,
+                "method": p.method,
+                "status": p.status,
+                "amount": p.amount,
+                "approved_at": str(p.approved_at) if p.approved_at else None,
+                "created_at": str(p.created_at),
+            }
+            for p in result.items
+        ],
+        total=result.total,
+        page=page,
+        size=size,
+    ))
 
 
 @router.post("/prepare", response_model=ApiResponse[PreparePaymentResponse])
